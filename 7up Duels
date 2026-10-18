@@ -159,166 +159,186 @@ local function _SevenUpMain()
             end
           end
 
-          do
-            -- Intro song catalog and playback helpers.
-            introSongs = {
-              {
-                name = "Song 1",
-                url = "https://files.catbox.moe/gm9wuu.mp3",
-                cover = "rbxthumb://type=Asset&id=86103485431123&w=420&h=420",
-              },
-              {
-                name = "Song 2",
-                url = "https://files.catbox.moe/4fjhdy.mp3",
-                cover = "rbxthumb://type=Asset&id=115168375440446&w=420&h=420",
-              },
-              {
-                name = "Song 3",
-                url = "https://files.catbox.moe/s2epvz.mp3",
-                cover = "rbxthumb://type=Asset&id=119640313536275&w=420&h=420",
-              },
-              {
-                name = "Song 4",
-                url = "https://files.catbox.moe/yd8wst.mp3",
-                cover = "rbxthumb://type=Asset&id=128076226146682&w=420&h=420",
-              },
-              {
-                name = "Song 5",
-                url = "https://files.catbox.moe/y2npwy.mp3",
-                cover = "rbxthumb://type=Asset&id=129638978079711&w=420&h=420",
-              },
-              {
-                name = "Song 6",
-                url = "https://files.catbox.moe/s7wuzb.mp3",
-                cover = "rbxthumb://type=Asset&id=106003436039570&w=420&h=420",
-              },
-              {
-                name = "Song 7",
-                url = "https://files.catbox.moe/n52dvv.mp3",
-                cover = "rbxthumb://type=Asset&id=101703838295262&w=420&h=420",
-              },
-              {
-                name = "Song 8",
-                url = "https://files.catbox.moe/p5mvim.mp3",
-                cover = "rbxthumb://type=Asset&id=112003973514134&w=420&h=420",
-              },
-              {
-                name = "Song 9",
-                url = "https://files.catbox.moe/xfihnx.mp3",
-                cover = "rbxthumb://type=Asset&id=123579863939760&w=420&h=420",
-              },
-              {
-                name = "Song 10",
-                url = "https://files.catbox.moe/byk07p.mp3",
-                cover = "rbxthumb://type=Asset&id=121860015578133&w=420&h=420",
-              },
+                    do
+            -- ═══════════════════════════════════════════════════════════
+            -- 7UP INTRO MUSIC SYSTEM (from download 16)
+            -- ═══════════════════════════════════════════════════════════
+            INTRO_MUSIC_OPTIONS = {
+              {name="Blue Bands", url="https://files.catbox.moe/mzvrir.mp3", file="K7IntroSong_1.mp3"},
+              {name="Legacy", url="https://files.catbox.moe/siru6c.mp3", file="K7IntroSong_2c.mp3"},
+              {name="paznerknacker.wav", url="https://files.catbox.moe/izcvhm.mp3", file="K7IntroSong_3b.mp3"},
+              {name="Tesla", url="https://files.catbox.moe/n85fch.mp3", file="K7IntroSong_4b.mp3"},
+              {name="King Nasir", url="https://files.catbox.moe/etk99y.mp3", file="K7IntroSong_5b.mp3"},
+              {name="Pure Cocaine", url="https://files.catbox.moe/dvjtjk.mp3", file="K7IntroSong_6.mp3"},
+              {name="nuts", url="https://files.catbox.moe/iyw1cb.mp3", file="K7IntroSong_7.mp3"},
+              {name="Gelato", url="https://files.catbox.moe/zf2z42.mp3", file="K7IntroSong_8.mp3"},
+              {name="FREAKED OUT", url="https://files.catbox.moe/dyt2ja.mp3", file="K7IntroSong_9.mp3"},
+              {name="Scam Likely", url="https://files.catbox.moe/pr85mz.mp3", file="K7IntroSong_10.mp3"},
+              {name="NO INTRO MUSIC", silent=true},
             }
 
-            sevenupIntroSongIndex = #introSongs
+            -- Compatibility alias so old references still work
+            introSongs = INTRO_MUSIC_OPTIONS
+            sevenupIntroSongIndex = 1
+            _G._SevenUpIntroMusicOptions = INTRO_MUSIC_OPTIONS
 
-            playIntroMusic = function(arg)
-              if #introSongs ~= 0 then
-                if type(writefile) ~= "function" or type(getcustomasset) ~= "function" then
-                  warn("[SevenUp] Intro music is unavailable: this executor does not support custom assets.")
-                  return
-                end
+            _G._K7IntroSongCache = _G._K7IntroSongCache or {}
+            _G._K7IntroSongDownloading = _G._K7IntroSongDownloading or {}
+            _G._K7IntroPlaybackSound = nil
+            _G._K7IntroPlaybackToken = 0
 
-                task.spawn(function()
-                  local ok, result = pcall(function()
-                    local clamp = math.clamp
-                    local floor2 = math.floor
-                    local num = tonumber(_G._SevenUpIntroSongIndex) or 1
-                    local n34 = #introSongs
-                    local v79 = introSongs[clamp(floor2(num), 1, n34)]
-                    local str9 = "SevenUpIntroMusic_" .. (v79.cacheFile or v79.url:match("/([^/]+)$") or "song.mp3"):gsub("[^%w%._%-]", "_")
+            _G._K7GetIntroSongName = function()
+              local idx = tonumber(_G._SevenUpIntroSongIndex) or 1
+              local opt = INTRO_MUSIC_OPTIONS[math.clamp(math.floor(idx), 1, #INTRO_MUSIC_OPTIONS)]
+              return opt and opt.name or "No Songs"
+            end
 
-                    if type(isfile) ~= "function" or not isfile(str9) then
-                      writefile(str9, game:HttpGet(v79.url))
-                    end
-
-                    local sound = Instance.new("Sound")
-                    sound.Name = "SevenUpIntroMusic"
-                    sound.SoundId = getcustomasset(str9)
-                    sound.Volume = 0.7
-                    sound.Looped = false
-                    sound.Parent = game:GetService("SoundService")
-                    sound.TimePosition = tonumber(v79.startTime) or 0
-                    sound:Play()
-                    if arg and arg(sound) == false then
-                      sound:Destroy()
-                      return
-                    end
-                    task.wait(6)
-                    if not sound.Parent then
-                      return
-                    end
-                    local tween2 = TweenService:Create(sound, TweenInfo.new(0.5, Enum.EasingStyle.Linear), { Volume = 0 })
-                    tween2:Play()
-                    tween2.Completed:Wait()
-                    sound:Destroy()
-                  end)
-
-                  if not ok then
-                    warn("[SevenUp] Could not play intro music:", result)
-                  end
-                end)
-
-                return
-              end
-
-              do
-                return
+            _G._K7StopIntroPlayback = function()
+              _G._K7IntroPlaybackToken = (_G._K7IntroPlaybackToken or 0) + 1
+              if _G._K7IntroPlaybackSound then
+                pcall(function() _G._K7IntroPlaybackSound:Stop() end)
+                pcall(function() _G._K7IntroPlaybackSound:Destroy() end)
+                _G._K7IntroPlaybackSound = nil
               end
             end
 
-            playChainSpearAudio = function(arg)
-              local flag17 = type(writefile) ~= "function"
-              local flag18
+            _G._K7CacheIntroSong = function(option, allowDownload)
+              if not option or not option.url or option.url == "" then return nil end
+              local fileName = option.file or "K7IntroSong.mp3"
+              local cache = _G._K7IntroSongCache
+              local downloading = _G._K7IntroSongDownloading
 
-              if flag17 then
-                flag18 = flag17
-              else
-                flag18 = type(getcustomasset) ~= "function"
-              end
-
-              if flag18 then
-                warn("[SevenUp] Chain-spear audio is unavailable: this executor does not support custom assets.")
-                return
-              end
-
-              task.spawn(function()
-                local ok, result = pcall(function()
-                  if type(isfile) ~= "function" or not isfile("SevenUpChainSpear_k19260.mp3") then
-                    writefile("SevenUpChainSpear_k19260.mp3", game:HttpGet("https://files.catbox.moe/k19260.mp3"))
+              local function loadExisting()
+                if cache[fileName] then return cache[fileName] end
+                local hasFile = false
+                pcall(function() if isfile then hasFile = isfile(fileName) end end)
+                if hasFile and getcustomasset then
+                  local ok, asset = pcall(function() return getcustomasset(fileName) end)
+                  if ok and asset then
+                    cache[fileName] = asset
+                    return asset
                   end
+                end
+                return nil
+              end
 
-                  local SoundService = game:GetService("SoundService")
+              local cached = loadExisting()
+              if cached then return cached end
+              if allowDownload == false then return nil end
+              if downloading[fileName] then
+                local waitStart = tick()
+                while downloading[fileName] and tick() - waitStart < 12 do task.wait(0.05) end
+                return loadExisting()
+              end
 
-                  for _, child in ipairs(SoundService:GetChildren()) do
-                    if child:IsA("Sound") and child.Name == "SevenUpChainSpearSound" then
-                      child:Destroy()
+              downloading[fileName] = true
+              local data = nil
+              pcall(function() if game and game.HttpGet then data = game:HttpGet(option.url) end end)
+              if (not data or #data == 0) then
+                pcall(function()
+                  local req = (syn and syn.request) or http_request or request
+                      or (getgenv and (getgenv().request or getgenv().http_request))
+                      or (http and http.request)
+                  if req then
+                    local res = req({Url = option.url, Method = "GET"})
+                    if res then data = res.Body or res.body end
+                  end
+                end)
+              end
+              if data and #data > 0 and writefile then
+                pcall(function()
+                  writefile(fileName, data)
+                  if getcustomasset then cache[fileName] = getcustomasset(fileName) end
+                end)
+              end
+              downloading[fileName] = nil
+              local result = loadExisting()
+              if not result then
+                result = option.url
+                cache[fileName] = result
+              end
+              return result
+            end
+
+            _G._K7PreloadIntroSongs = function()
+              task.spawn(function()
+                pcall(function()
+                  local idx = tonumber(_G._SevenUpIntroSongIndex) or 1
+                  _G._K7CacheIntroSong(INTRO_MUSIC_OPTIONS[math.clamp(idx, 1, #INTRO_MUSIC_OPTIONS)], true)
+                  for _, option in ipairs(INTRO_MUSIC_OPTIONS) do
+                    if option ~= INTRO_MUSIC_OPTIONS[math.clamp(idx, 1, #INTRO_MUSIC_OPTIONS)] then
+                      _G._K7CacheIntroSong(option, true)
+                      task.wait(0.05)
                     end
                   end
-
-                  local instance = Instance.new("Sound")
-                  instance.Name = "SevenUpChainSpearSound"
-                  instance.SoundId = getcustomasset("SevenUpChainSpear_k19260.mp3")
-                  instance.Volume = 0
-                  instance.Looped = true
-                  instance.Parent = SoundService
-                  instance:Play()
-                  if arg and arg(instance) == false then
-                    instance:Destroy()
-                    return
-                  end
-                  TweenService:Create(instance, TweenInfo.new(0.4, Enum.EasingStyle.Linear), { Volume = 1.25 }):Play()
                 end)
-
-                if not ok then
-                  warn("[SevenUp] Could not play chain-spear audio:", result)
-                end
               end)
             end
+
+            _G._K7PreviewIntroSong = function()
+              local idx = tonumber(_G._SevenUpIntroSongIndex) or 1
+              local option = INTRO_MUSIC_OPTIONS[math.clamp(math.floor(idx), 1, #INTRO_MUSIC_OPTIONS)]
+              if not option then return end
+              if option.silent then _G._K7StopIntroPlayback(); return end
+              local token = (_G._K7IntroPlaybackToken or 0) + 1
+              _G._K7IntroPlaybackToken = token
+              if _G._K7IntroPlaybackSound then
+                pcall(function() _G._K7IntroPlaybackSound:Stop() end)
+                pcall(function() _G._K7IntroPlaybackSound:Destroy() end)
+                _G._K7IntroPlaybackSound = nil
+              end
+              task.spawn(function()
+                local soundId = _G._K7CacheIntroSong(option, true)
+                if token ~= _G._K7IntroPlaybackToken then return end
+                if not soundId then return end
+                local sound = Instance.new("Sound")
+                sound.Name = "K7IntroPreview"
+                sound.Volume = 0.5
+                sound.SoundId = soundId
+                sound.Parent = game:GetService("SoundService")
+                if token ~= _G._K7IntroPlaybackToken then pcall(function() sound:Destroy() end); return end
+                _G._K7IntroPlaybackSound = sound
+                pcall(function() sound:Play() end)
+                task.delay(4, function()
+                  if token == _G._K7IntroPlaybackToken then
+                    pcall(function() sound:Stop() end)
+                    pcall(function() sound:Destroy() end)
+                    if _G._K7IntroPlaybackSound == sound then _G._K7IntroPlaybackSound = nil end
+                  end
+                end)
+              end)
+            end
+
+            _G._K7PlayIntroMusic = function()
+              _G._K7StopIntroPlayback()
+              _G._SevenUpIntroEnabled = true
+              local idx = tonumber(_G._SevenUpIntroSongIndex) or 1
+              local option = INTRO_MUSIC_OPTIONS[math.clamp(math.floor(idx), 1, #INTRO_MUSIC_OPTIONS)]
+              if not option or option.silent then return end
+              local token = _G._K7IntroPlaybackToken
+              task.spawn(function()
+                local soundId = _G._K7CacheIntroSong(option, true)
+                if token ~= _G._K7IntroPlaybackToken then return end
+                if not soundId then return end
+                local sound = Instance.new("Sound")
+                sound.Name = "K7IntroMusic"
+                sound.Volume = 0.7
+                sound.SoundId = soundId
+                sound.Parent = game:GetService("SoundService")
+                if token ~= _G._K7IntroPlaybackToken then pcall(function() sound:Destroy() end); return end
+                _G._K7IntroPlaybackSound = sound
+                local loadStart = tick()
+                while sound and sound.Parent and not sound.IsLoaded and tick() - loadStart < 12 do task.wait(0.05) end
+                pcall(function() sound:Play() end)
+                task.delay(24, function() if token == _G._K7IntroPlaybackToken then _G._K7StopIntroPlayback() end end)
+              end)
+            end
+
+            -- Compatibility alias (old code calls playIntroMusic())
+            playIntroMusic = _G._K7PlayIntroMusic
+            playChainSpearAudio = function() end -- no-op, feature removed
+
+            _G._K7PreloadIntroSongs()
 
             -- Font mode and text styling.
             font = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
@@ -11491,1180 +11511,451 @@ local function _SevenUpMain()
         }
       end
 
-      local function sevenupPlayIntro()
-        if _G._SevenUpIntroCleanup then
-          pcall(_G._SevenUpIntroCleanup)
+            -- ═══════════════════════════════════════════════════════════════
+      -- 7UP SODA-CAN INTRO (from download 16)
+      -- ═══════════════════════════════════════════════════════════════
+      local function sevenupPlaySodaIntro()
+        local introEnabled = _G._SevenUpIntroEnabled ~= false
+
+        local function restoreOwnedUI()
+          _G._K7IntroHidingUI = false
+          _G._SevenUpIntroPlaying = false
+
+          local reveal = _G._SevenUpRevealMainAfterIntro
+          _G._SevenUpRevealMainAfterIntro = nil
+
+          if reveal then
+            pcall(reveal)
+          else
+            if _G._SevenUpRevealStealBarAfterIntro then
+              pcall(_G._SevenUpRevealStealBarAfterIntro)
+            end
+            if _G._SevenUpSetOpen then
+              pcall(_G._SevenUpSetOpen, true, true)
+            end
+          end
+        end
+
+        if not introEnabled then
+          _G._SevenUpIntroPlaying = false
+          return
         end
 
         _G._SevenUpIntroPlaying = true
-        local flag28 = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+        pcall(_G._K7PlayIntroMusic)
 
-        local tbl38 = {
-          130451097419605,
-          129030262345273,
-          76292842640935,
-          82757811555212,
-          92910922537368,
-          105960347086002,
-          116720305084998,
-          90341354549871,
-          72399600208480,
-          81834484116440,
+        local introParent = playerGui
+        if not introParent then restoreOwnedUI(); return end
+        local stale = introParent:FindFirstChild("K7SodaOpeningIntro")
+        if stale then stale:Destroy() end
+
+        local introGui = Instance.new("ScreenGui")
+        introGui.Name = "K7SodaOpeningIntro"
+        introGui.IgnoreGuiInset = true
+        introGui.ResetOnSpawn = false
+        introGui.DisplayOrder = 120
+        introGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        introGui.Parent = introParent
+
+        local openSfx = Instance.new("Sound")
+        openSfx.Name = "SevenUpCanOpenSFX"
+        openSfx.SoundId = "rbxassetid://6811412838"
+        openSfx.Volume = 7
+        openSfx.Looped = false
+        openSfx.Parent = game:GetService("SoundService")
+        task.spawn(function()
+          pcall(function()
+            game:GetService("ContentProvider"):PreloadAsync({openSfx})
+          end)
+        end)
+
+        local active = true
+        local finished = false
+        local function corner(obj, r)
+          local c = Instance.new("UICorner", obj); c.CornerRadius = UDim.new(0, r); return c
+        end
+        local function tween(obj, time, style, direction, props)
+          if not obj or not obj.Parent then return nil end
+          local tw = TweenService:Create(obj, TweenInfo.new(time, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out), props)
+          tw:Play(); return tw
+        end
+        local function aliveWait(seconds)
+          local elapsed = 0
+          while active and elapsed < seconds do
+            elapsed = elapsed + task.wait(math.min(0.05, seconds - elapsed))
+          end
+          return active
+        end
+
+        local root = Instance.new("Frame", introGui)
+        root.Size = UDim2.fromScale(1, 1)
+        root.BackgroundColor3 = Color3.fromRGB(1, 18, 9)
+        root.BackgroundTransparency = 1
+        root.BorderSizePixel = 0
+        root.ZIndex = 1
+        root.Active = true
+        local rootGradient = Instance.new("UIGradient", root)
+        rootGradient.Color = ColorSequence.new({
+          ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 20, 10)),
+          ColorSequenceKeypoint.new(0.45, Color3.fromRGB(0, 62, 29)),
+          ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 12, 7))
+        })
+        rootGradient.Rotation = 32
+
+        local glow = Instance.new("Frame", root)
+        glow.AnchorPoint = Vector2.new(0.5, 0.5)
+        glow.Position = UDim2.new(0.5, 0, 0.46, 0)
+        glow.Size = UDim2.new(0, 640, 0, 640)
+        glow.BackgroundColor3 = Color3.fromRGB(0, 220, 96)
+        glow.BackgroundTransparency = 0.9
+        glow.BorderSizePixel = 0
+        glow.ZIndex = 2
+        corner(glow, 320)
+
+        local topCopy = Instance.new("TextLabel", root)
+        topCopy.AnchorPoint = Vector2.new(0.5, 0)
+        topCopy.Position = UDim2.new(0.5, 0, 0.07, 0)
+        topCopy.Size = UDim2.new(0, 520, 0, 28)
+        topCopy.BackgroundTransparency = 1
+        topCopy.Text = "CHILLED  •  CARBONATED  •  READY"
+        topCopy.TextColor3 = Color3.fromRGB(115, 255, 172)
+        topCopy.TextTransparency = 1
+        topCopy.Font = Enum.Font.GothamBlack
+        topCopy.TextSize = 11
+        topCopy.ZIndex = 15
+
+        local skipHint = Instance.new("TextLabel", root)
+        skipHint.AnchorPoint = Vector2.new(0.5, 1)
+        skipHint.Position = UDim2.new(0.5, 0, 1, -24)
+        skipHint.Size = UDim2.new(0, 420, 0, 24)
+        skipHint.BackgroundTransparency = 1
+        skipHint.Text = "DOUBLE CLICK / DOUBLE TAP ANYWHERE TO SKIP"
+        skipHint.TextColor3 = Color3.fromRGB(255, 255, 255)
+        skipHint.TextTransparency = 0.08
+        skipHint.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        skipHint.TextStrokeTransparency = 0.35
+        skipHint.Font = Enum.Font.GothamBlack
+        skipHint.TextSize = 11
+        skipHint.ZIndex = 81
+
+        local canAssembly = Instance.new("Frame", root)
+        canAssembly.Name = "OpeningCan"
+        canAssembly.AnchorPoint = Vector2.new(0.5, 0.5)
+        canAssembly.Position = UDim2.new(0.5, 0, 0.46, 220)
+        canAssembly.Size = UDim2.new(0, 220, 0, 420)
+        canAssembly.BackgroundTransparency = 1
+        canAssembly.BorderSizePixel = 0
+        canAssembly.Rotation = 10
+        canAssembly.ZIndex = 10
+        local canScale = Instance.new("UIScale", canAssembly)
+        local viewport = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(900, 700)
+        local fit = math.clamp(math.min(viewport.X / 650, viewport.Y / 760), 0.64, 1)
+        canScale.Scale = fit * 0.58
+
+        local canShadow = Instance.new("Frame", canAssembly)
+        canShadow.Size = UDim2.new(0, 188, 0, 326)
+        canShadow.Position = UDim2.new(0, 22, 0, 73)
+        canShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        canShadow.BackgroundTransparency = 0.55
+        canShadow.BorderSizePixel = 0
+        canShadow.ZIndex = 2
+        corner(canShadow, 46)
+
+        local canBody = Instance.new("Frame", canAssembly)
+        canBody.Name = "CanBody"
+        canBody.Size = UDim2.new(0, 180, 0, 324)
+        canBody.Position = UDim2.new(0, 20, 0, 62)
+        canBody.BackgroundColor3 = Color3.fromRGB(0, 118, 51)
+        canBody.BorderSizePixel = 0
+        canBody.ClipsDescendants = true
+        canBody.ZIndex = 5
+        corner(canBody, 42)
+        local bodyGradient = Instance.new("UIGradient", canBody)
+        bodyGradient.Color = ColorSequence.new({
+          ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 54, 26)),
+          ColorSequenceKeypoint.new(0.2, Color3.fromRGB(0, 204, 86)),
+          ColorSequenceKeypoint.new(0.52, Color3.fromRGB(0, 120, 50)),
+          ColorSequenceKeypoint.new(0.84, Color3.fromRGB(0, 65, 31)),
+          ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 28, 15))
+        })
+        bodyGradient.Rotation = 6
+
+        local redDisc = Instance.new("Frame", canBody)
+        redDisc.Size = UDim2.new(0, 76, 0, 76)
+        redDisc.Position = UDim2.new(0, 23, 0, 122)
+        redDisc.BackgroundColor3 = Color3.fromRGB(224, 38, 45)
+        redDisc.BorderSizePixel = 0
+        redDisc.ZIndex = 9
+        corner(redDisc, 38)
+        local seven = Instance.new("TextLabel", redDisc)
+        seven.Size = UDim2.fromScale(1, 1)
+        seven.BackgroundTransparency = 1
+        seven.Text = "7"
+        seven.TextColor3 = Color3.fromRGB(255, 255, 255)
+        seven.Font = Enum.Font.GothamBlack
+        seven.TextSize = 57
+        seven.Rotation = -9
+        seven.ZIndex = 10
+
+        local up = Instance.new("TextLabel", canBody)
+        up.Size = UDim2.new(0, 82, 0, 64)
+        up.Position = UDim2.new(0, 91, 0, 132)
+        up.BackgroundTransparency = 1
+        up.Text = "UP"
+        up.TextColor3 = Color3.fromRGB(255, 255, 255)
+        up.Font = Enum.Font.GothamBlack
+        up.TextSize = 39
+        up.TextXAlignment = Enum.TextXAlignment.Left
+        up.Rotation = -5
+        up.ZIndex = 10
+
+        local canCaption = Instance.new("TextLabel", canBody)
+        canCaption.Size = UDim2.new(1, -24, 0, 40)
+        canCaption.Position = UDim2.new(0, 12, 1, -66)
+        canCaption.BackgroundTransparency = 1
+        canCaption.Text = "7UP HUB\nDUELS EDITION"
+        canCaption.TextColor3 = Color3.fromRGB(220, 255, 230)
+        canCaption.Font = Enum.Font.GothamBlack
+        canCaption.TextSize = 11
+        canCaption.ZIndex = 10
+
+        local neck = Instance.new("Frame", canAssembly)
+        neck.Size = UDim2.new(0, 158, 0, 48)
+        neck.Position = UDim2.new(0, 31, 0, 43)
+        neck.BackgroundColor3 = Color3.fromRGB(0, 90, 41)
+        neck.BorderSizePixel = 0
+        neck.ZIndex = 7
+        corner(neck, 24)
+
+        local lid = Instance.new("Frame", canAssembly)
+        lid.Name = "OpeningLid"
+        lid.Size = UDim2.new(0, 168, 0, 44)
+        lid.Position = UDim2.new(0, 26, 0, 31)
+        lid.BackgroundColor3 = Color3.fromRGB(157, 173, 163)
+        lid.BorderSizePixel = 0
+        lid.ZIndex = 12
+        corner(lid, 22)
+        local lidGradient = Instance.new("UIGradient", lid)
+        lidGradient.Color = ColorSequence.new({
+          ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 86, 76)),
+          ColorSequenceKeypoint.new(0.35, Color3.fromRGB(224, 232, 226)),
+          ColorSequenceKeypoint.new(0.7, Color3.fromRGB(132, 149, 138)),
+          ColorSequenceKeypoint.new(1, Color3.fromRGB(52, 68, 59))
+        })
+
+        local lidInset = Instance.new("Frame", lid)
+        lidInset.Size = UDim2.new(1, -28, 1, -14)
+        lidInset.Position = UDim2.new(0, 14, 0, 7)
+        lidInset.BackgroundColor3 = Color3.fromRGB(74, 91, 80)
+        lidInset.BackgroundTransparency = 0.12
+        lidInset.BorderSizePixel = 0
+        lidInset.ZIndex = 13
+        corner(lidInset, 15)
+
+        local pullTab = Instance.new("Frame", lid)
+        pullTab.Name = "PullTab"
+        pullTab.AnchorPoint = Vector2.new(0.5, 0.5)
+        pullTab.Position = UDim2.new(0.5, 4, 0.5, 0)
+        pullTab.Size = UDim2.new(0, 67, 0, 18)
+        pullTab.BackgroundColor3 = Color3.fromRGB(214, 223, 217)
+        pullTab.BorderSizePixel = 0
+        pullTab.ZIndex = 15
+        corner(pullTab, 9)
+        local tabHole = Instance.new("Frame", pullTab)
+        tabHole.Size = UDim2.new(0, 25, 0, 8)
+        tabHole.Position = UDim2.new(0, 8, 0, 5)
+        tabHole.BackgroundColor3 = Color3.fromRGB(82, 98, 88)
+        tabHole.BorderSizePixel = 0
+        tabHole.ZIndex = 16
+        corner(tabHole, 4)
+
+        local openingCore = Instance.new("Frame", canAssembly)
+        openingCore.AnchorPoint = Vector2.new(0.5, 0.5)
+        openingCore.Position = UDim2.new(0.5, 0, 0, 49)
+        openingCore.Size = UDim2.new(0, 0, 0, 0)
+        openingCore.BackgroundColor3 = Color3.fromRGB(240, 255, 245)
+        openingCore.BackgroundTransparency = 0.1
+        openingCore.BorderSizePixel = 0
+        openingCore.ZIndex = 11
+        corner(openingCore, 45)
+
+        local fizzText = Instance.new("TextLabel", root)
+        fizzText.AnchorPoint = Vector2.new(0.5, 0.5)
+        fizzText.Position = UDim2.new(0.5, 0, 0.22, 22)
+        fizzText.Size = UDim2.new(0, 420, 0, 72)
+        fizzText.BackgroundTransparency = 1
+        fizzText.Text = "PSSSHH!"
+        fizzText.TextColor3 = Color3.fromRGB(220, 255, 232)
+        fizzText.TextTransparency = 1
+        fizzText.Font = Enum.Font.GothamBlack
+        fizzText.TextSize = 46
+        fizzText.Rotation = -4
+        fizzText.ZIndex = 35
+
+        local fizzLayer = Instance.new("Frame", root)
+        fizzLayer.Size = UDim2.fromScale(1, 1)
+        fizzLayer.BackgroundTransparency = 1
+        fizzLayer.BorderSizePixel = 0
+        fizzLayer.ZIndex = 30
+        local bubbles = {}
+        local bubbleLayout = {
+          {-18,0,-160,-210,13},{15,2,130,-225,9},{-42,8,-210,-180,8},{48,9,220,-170,14},
+          {-7,4,-80,-265,7},{28,5,80,-250,11},{-61,16,-270,-130,10},{67,14,285,-110,7},
+          {-28,18,-145,-155,16},{38,20,175,-145,8},{0,0,0,-295,12},{-78,22,-315,-90,6},
+          {82,20,330,-65,10},{-10,13,-35,-205,6},{11,14,42,-190,5},{-51,24,-225,-105,12}
         }
-
-        local v78 = Random.new():NextInteger(1, 100)
-        local str10 = v78 <= 12 and "chainSpear"
-        local sevenupCurrentIntroVariant
-
-        if str10 then
-          sevenupCurrentIntroVariant = str10
-        else
-          sevenupCurrentIntroVariant = v78 <= 55 and "toji" or "gojo"
+        for i, data in ipairs(bubbleLayout) do
+          local bubble = Instance.new("Frame", fizzLayer)
+          local size = data[5]
+          bubble.AnchorPoint = Vector2.new(0.5, 0.5)
+          bubble.Position = UDim2.new(0.5, data[1], 0.46, data[2])
+          bubble.Size = UDim2.new(0, 0, 0, 0)
+          bubble.BackgroundColor3 = i % 3 == 0 and Color3.fromRGB(110, 255, 170) or Color3.fromRGB(240, 255, 245)
+          bubble.BackgroundTransparency = 0.08
+          bubble.BorderSizePixel = 0
+          bubble.ZIndex = 31
+          corner(bubble, size)
+          bubbles[#bubbles + 1] = {obj = bubble, size = size, endX = data[3], endY = data[4], delay = (i - 1) * 0.025}
         end
 
-        if _G._SevenUpForceIntroVariant == "chainSpear" or _G._SevenUpForceIntroVariant == "toji" or _G._SevenUpForceIntroVariant == "gojo" then
-          sevenupCurrentIntroVariant = _G._SevenUpForceIntroVariant
+        local title = Instance.new("TextLabel", root)
+        title.AnchorPoint = Vector2.new(0.5, 0.5)
+        title.Position = UDim2.new(0.5, 0, 0.79, 28)
+        title.Size = UDim2.new(0, 620, 0, 74)
+        title.BackgroundTransparency = 1
+        title.Text = "7UP DUELS"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.TextTransparency = 1
+        title.Font = Enum.Font.GothamBlack
+        title.TextScaled = true
+        title.ZIndex = 40
+        local titleLimit = Instance.new("UITextSizeConstraint", title)
+        titleLimit.MinTextSize = 26; titleLimit.MaxTextSize = 58
+
+        local subtitle = Instance.new("TextLabel", root)
+        subtitle.AnchorPoint = Vector2.new(0.5, 0.5)
+        subtitle.Position = UDim2.new(0.5, 0, 0.86, 18)
+        subtitle.Size = UDim2.new(0, 500, 0, 25)
+        subtitle.BackgroundTransparency = 1
+        subtitle.Text = "discord.gg/7up  •  FRESHLY OPENED"
+        subtitle.TextColor3 = Color3.fromRGB(90, 255, 160)
+        subtitle.TextTransparency = 1
+        subtitle.Font = Enum.Font.GothamBlack
+        subtitle.TextSize = 11
+        subtitle.ZIndex = 40
+
+        local wipe = Instance.new("Frame", root)
+        wipe.AnchorPoint = Vector2.new(0.5, 0.5)
+        wipe.Position = UDim2.new(0.5, 0, 0.5, 0)
+        wipe.Size = UDim2.new(0, 0, 0, 0)
+        wipe.BackgroundColor3 = Color3.fromRGB(0, 210, 88)
+        wipe.BorderSizePixel = 0
+        wipe.ZIndex = 70
+        corner(wipe, 1200)
+
+        local skipInputConn = nil
+        local function finishIntro()
+          if finished then return end
+          finished = true
+          active = false
+          if skipInputConn then skipInputConn:Disconnect(); skipInputConn = nil end
+          pcall(_G._K7StopIntroPlayback)
+          pcall(function() openSfx:Stop(); openSfx:Destroy() end)
+          task.delay(0.55, function()
+            pcall(function() if introGui then introGui:Destroy() end end)
+          end)
+          restoreOwnedUI()
         end
 
-        _G._SevenUpCurrentIntroVariant = sevenupCurrentIntroVariant
-        local Lighting_2 = game:GetService("Lighting")
-        local sevenupIntro = screenGui:FindFirstChild("SevenUpIntro")
-
-        if sevenupIntro then
-          sevenupIntro:Destroy()
-        end
-
-        local sevenupIntroBlur = Lighting_2:FindFirstChild("SevenUpIntroBlur")
-
-        if sevenupIntroBlur then
-          sevenupIntroBlur:Destroy()
-        end
-
-        local frame2 = Instance.new("Frame")
-        frame2.Name = "SevenUpIntro"
-        frame2.BackgroundColor3 = Color3.fromRGB(10, 5, 8)
-        frame2.BackgroundTransparency = 1
-        frame2.BorderSizePixel = 0
-        frame2.Size = UDim2.new(1, 0, 1, 0)
-        frame2.ZIndex = 1000
-        frame2.Visible = false
-        frame2.Parent = screenGui
-        local imageLabel = Instance.new("ImageLabel")
-        imageLabel.Name = "IntroBackdropImage"
-        imageLabel.BackgroundTransparency = 1
-        imageLabel.Image = "rbxassetid://98541566010518"
-        imageLabel.ImageTransparency = 1
-        imageLabel.ScaleType = Enum.ScaleType.Fit
-        imageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-        imageLabel.Position = UDim2.new(0.5, 0, 0.42, 0)
-        imageLabel.Size = UDim2.new(0.92, 0, 0.5, 0)
-        imageLabel.ZIndex = 1000
-        imageLabel.Visible = sevenupCurrentIntroVariant == "wheel"
-        imageLabel.Parent = frame2
-        local uiScale = Instance.new("UIScale", imageLabel)
-        local instance = Instance.new("Frame")
-        instance.Name = "ChainSpearStage"
-        instance.BackgroundTransparency = 1
-        instance.AnchorPoint = Vector2.new(0.5, 0.5)
-        instance.Position = UDim2.new(0.5, 0, 0.42, 0)
-        instance.Size = flag28 and UDim2.new(0.64, 0, 0.64, 0) or UDim2.new(0.75, 0, 0.75, 0)
-        instance.ClipsDescendants = false
-        instance.Visible = sevenupCurrentIntroVariant == "chainSpear"
-        instance.ZIndex = 1000
-        instance.Parent = frame2
-        local uiAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
-        uiAspectRatioConstraint.AspectRatio = 1
-        uiAspectRatioConstraint.DominantAxis = Enum.DominantAxis.Width
-        uiAspectRatioConstraint.Parent = instance
-        local uiSizeConstraint = Instance.new("UISizeConstraint")
-        uiSizeConstraint.MinSize = Vector2.new(flag28 and 210 or 420, flag28 and 200 or 420)
-        uiSizeConstraint.MaxSize = Vector2.new(flag28 and 280 or 680, flag28 and 280 or 680)
-        uiSizeConstraint.Parent = instance
-        local tbl39 = {}
-        local tbl40 = {}
-        local tbl41 = { -110, -96, -82, -69, -56, -45, -33, -23, -14, -6, 0 }
-        local tbl42 = { 0.96, 0.94, 0.91, 0.87, 0.82, 0.75, 0.67, 0.57, 0.45, 0.3, 0.14 }
-
-        for i, v79 in ipairs(tbl41) do
-          local frame3 = Instance.new("Frame")
-          frame3.Name = "ChainSpearRotor" .. i
-          frame3.BackgroundTransparency = 1
-          frame3.AnchorPoint = Vector2.new(0.5, 0.5)
-          frame3.Position = UDim2.fromScale(0.5, 0.5)
-          frame3.Size = UDim2.fromScale(1, 1)
-          frame3.Rotation = v79
-          frame3.ZIndex = 1000
-          frame3.Parent = instance
-          local imageLabel2 = Instance.new("ImageLabel")
-          imageLabel2.Name = "ChainSpearTrail" .. i
-          imageLabel2.BackgroundTransparency = 1
-          imageLabel2.Image = "rbxassetid://118963313877514"
-          imageLabel2.ImageColor3 = i == #tbl41 and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(205, 215, 225)
-          imageLabel2.ImageTransparency = 1
-          imageLabel2.ScaleType = Enum.ScaleType.Fit
-          imageLabel2.AnchorPoint = Vector2.new(0.73, 0.02)
-          imageLabel2.Position = UDim2.fromScale(0.5, 0.5)
-          imageLabel2.Size = flag28 and UDim2.new(0.553, 0, 0.829, 0) or UDim2.new(0.49, 0, 0.735, 0)
-          imageLabel2.ZIndex = 1000
-          imageLabel2.Parent = frame3
-          imageLabel2:SetAttribute("_SevenUpTargetTransparency", tbl42[i])
-          tbl39[i] = frame3
-          tbl40[i] = imageLabel2
-        end
-
-        local frame3 = Instance.new("Frame")
-        frame3.Name = "TojiCutoutStage"
-        frame3.BackgroundTransparency = 1
-        frame3.BorderSizePixel = 0
-        frame3.AnchorPoint = Vector2.new(0.5, 0.5)
-        frame3.Position = UDim2.new(0.5, 0, 0.42, 0)
-        frame3.Size = flag28 and UDim2.new(0.76, 0, 0, 312) or UDim2.new(0.92, 0, 0.5, 0)
-        frame3.Rotation = -2
-        frame3.ClipsDescendants = false
-        frame3.Visible = sevenupCurrentIntroVariant == "toji"
-        frame3.ZIndex = 1000
-        frame3.Parent = frame2
-        local uiScale2 = Instance.new("UIScale")
-        uiScale2.Scale = 1
-        uiScale2.Parent = frame3
-        local tbl43 = {}
-        local tbl44 = {}
-        local tbl45 = {}
-        local tbl46 = {}
-        local tbl47 = {}
-        local tbl48 = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } }
-        local tbl49 = { { -2, 0 }, { 2, 0 }, { 0, -2 }, { 0, 2 } }
-        local tbl50 = {}
-        local tbl51 = {}
-        local imageLabel2 = Instance.new("ImageLabel")
-        imageLabel2.Name = "TojiPantsWhiteFill"
-        imageLabel2.BackgroundTransparency = 1
-        imageLabel2.Image = "rbxassetid://82757811555212"
-        imageLabel2.ImageColor3 = Color3.fromRGB(255, 255, 255)
-        imageLabel2.ImageTransparency = 1
-        imageLabel2.ScaleType = Enum.ScaleType.Fit
-        imageLabel2.AnchorPoint = Vector2.new(0.5, 0.5)
-        imageLabel2.Position = UDim2.fromScale(0.5, 0.5)
-        imageLabel2.Size = UDim2.fromScale(1, 1)
-        imageLabel2.ZIndex = 998
-        imageLabel2.Parent = frame3
-
-        local tbl52 = {
-          [130451097419605] = true,
-          [129030262345273] = true,
-          [105960347086002] = true,
-          [81834484116440] = true,
-          [92910922537368] = true,
-          [116720305084998] = true,
-          [76292842640935] = true,
-          [90341354549871] = true,
-          [72399600208480] = true,
-        }
-
-        local tbl53 = { [129030262345273] = true, [105960347086002] = true, [81834484116440] = true }
-
-        for i, v79 in ipairs(tbl38) do
-          local tbl54 = {}
-
-          for _, v80 in ipairs(tbl48) do
-            local instance2 = Instance.new("ImageLabel")
-            instance2.Name = "TojiSeamFill" .. i
-            instance2.BackgroundTransparency = 1
-            instance2.Image = "rbxassetid://" .. tostring(v79)
-            instance2.ImageColor3 = Color3.fromRGB(10, 10, 8)
-            instance2.ImageTransparency = 1
-            instance2.ScaleType = Enum.ScaleType.Fit
-            instance2.AnchorPoint = Vector2.new(0.5, 0.5)
-            instance2.Position = UDim2.new(0.5, v80[1], 0.5, v80[2])
-            instance2.Size = UDim2.fromScale(1, 1)
-            instance2.ZIndex = 999
-            instance2.Parent = frame3
-            table.insert(tbl54, { image = instance2, x = v80[1], y = v80[2] })
-          end
-
-          local imageLabel3 = Instance.new("ImageLabel")
-          imageLabel3.Name = "TojiPiece" .. i
-          imageLabel3.BackgroundTransparency = 1
-          imageLabel3.Image = "rbxassetid://" .. tostring(v79)
-          imageLabel3.ImageTransparency = 1
-          imageLabel3.ScaleType = Enum.ScaleType.Fit
-          imageLabel3.AnchorPoint = Vector2.new(0.5, 0.5)
-          imageLabel3.Position = UDim2.fromScale(0.5, 0.5)
-          imageLabel3.Size = UDim2.fromScale(1, 1)
-          imageLabel3.ZIndex = 1000
-          imageLabel3.Parent = frame3
-          tbl43[i] = imageLabel3
-          tbl44[imageLabel3] = tbl54
-
-          if v79 == 129030262345273 then
-            local imageLabel4 = Instance.new("ImageLabel")
-            imageLabel4.Name = "TojiSwordShine"
-            imageLabel4.BackgroundTransparency = 1
-            imageLabel4.Image = imageLabel3.Image
-            imageLabel4.ImageColor3 = Color3.fromRGB(255, 240, 240)
-            imageLabel4.ImageTransparency = 1
-            imageLabel4.ScaleType = Enum.ScaleType.Fit
-            imageLabel4.AnchorPoint = Vector2.new(0.5, 0.5)
-            imageLabel4.Position = imageLabel3.Position
-            imageLabel4.Size = imageLabel3.Size
-            imageLabel4.ZIndex = 1001
-            imageLabel4.Parent = frame3
-            local uiGradient = Instance.new("UIGradient")
-            uiGradient.Rotation = -25
-            uiGradient.Offset = Vector2.new(-1, 0)
-            local numberSequence = NumberSequence.new
-            local tbl55 = {}
-            local v80 = NumberSequenceKeypoint.new(0, 1)
-            local v81 = NumberSequenceKeypoint.new(0.36, 1)
-            local v82 = NumberSequenceKeypoint.new(0.5, 0)
-            local v83 = NumberSequenceKeypoint.new(0.64, 1)
-            local new = NumberSequenceKeypoint.new
-            tbl55[1] = v80
-            tbl55[2] = v81
-            tbl55[3] = v82
-            tbl55[4] = v83
-
-            do
-              local values = table.pack(new(1, 1))
-              table.move(values, 1, values.n, 5, tbl55)
-            end
-
-            uiGradient.Transparency = numberSequence(tbl55)
-            uiGradient.Parent = imageLabel4
-            tbl46[imageLabel3] = { image = imageLabel4, gradient = uiGradient }
-          end
-
-          if v79 == 105960347086002 then
-            local tbl55 = {}
-
-            for _, v80 in ipairs(tbl49) do
-              local imageLabel4 = Instance.new("ImageLabel")
-              imageLabel4.Name = "TojiMovingHandWhiteFill"
-              imageLabel4.BackgroundTransparency = 1
-              imageLabel4.Image = "rbxassetid://" .. tostring(v79)
-              imageLabel4.ImageColor3 = Color3.fromRGB(240, 240, 255)
-              imageLabel4.ImageTransparency = 1
-              imageLabel4.ScaleType = Enum.ScaleType.Fit
-              imageLabel4.AnchorPoint = Vector2.new(0.5, 0.5)
-              imageLabel4.Position = UDim2.new(0.5, v80[1], 0.5, v80[2])
-              imageLabel4.Size = UDim2.fromScale(1, 1)
-              imageLabel4.ZIndex = 998
-              imageLabel4.Parent = frame3
-              table.insert(tbl55, { image = imageLabel4, x = v80[1], y = v80[2] })
-            end
-
-            tbl45[imageLabel3] = tbl55
-          end
-
-          if tbl52[v79] then
-            if v79 == 92910922537368 then
-              tbl47[imageLabel3] = { x = 2, y = 3 }
-            elseif v79 == 116720305084998 then
-              tbl47[imageLabel3] = { x = 2, y = 5 }
-            else
-              tbl47[imageLabel3] = { x = 0, y = 0 }
-            end
-
-            table.insert(tbl50, imageLabel3)
-
-            if tbl53[v79] then
-              table.insert(tbl51, imageLabel3)
-            end
-          end
-        end
-
-        local function fn56(arg, arg2, rotation, arg3)
-          local tbl54 = tbl44[arg] or {}
-          local tbl55 = tbl45[arg] or {}
-          local v79 = tbl46[arg]
-          local tbl56 = tbl47[arg] or { x = 0, y = 0 }
-          local udim2 = UDim2.new(arg2.X.Scale, arg2.X.Offset + tbl56.x, arg2.Y.Scale, arg2.Y.Offset + 5 + tbl56.y)
-
-          if arg3 then
-            TweenService:Create(arg, arg3, { Position = udim2, Rotation = rotation }):Play()
-
-            for _, v80 in ipairs(tbl54) do
-              TweenService:Create(v80.image, arg3, {
-                Position = UDim2.new(udim2.X.Scale, udim2.X.Offset + v80.x, udim2.Y.Scale, udim2.Y.Offset + v80.y),
-                Rotation = rotation,
-              }):Play()
-            end
-
-            for _, v80 in ipairs(tbl55) do
-              TweenService:Create(v80.image, arg3, {
-                Position = UDim2.new(udim2.X.Scale, udim2.X.Offset + v80.x, udim2.Y.Scale, udim2.Y.Offset + v80.y),
-                Rotation = rotation,
-              }):Play()
-            end
-
-            if v79 then
-              TweenService:Create(v79.image, arg3, { Position = udim2, Rotation = rotation }):Play()
-            end
+        local lastSkipPress = 0
+        skipInputConn = UserInputService.InputBegan:Connect(function(input)
+          if not active then return end
+          local inputType = input.UserInputType
+          if inputType ~= Enum.UserInputType.MouseButton1 and inputType ~= Enum.UserInputType.Touch then return end
+          local now = tick()
+          if now - lastSkipPress <= 0.36 then
+            lastSkipPress = 0
+            finishIntro()
           else
-            arg.Position = udim2
-            arg.Rotation = rotation
-
-            for _, v80 in ipairs(tbl54) do
-              v80.image.Position = UDim2.new(udim2.X.Scale, udim2.X.Offset + v80.x, udim2.Y.Scale, udim2.Y.Offset + v80.y)
-              v80.image.Rotation = rotation
-            end
-
-            for _, v80 in ipairs(tbl55) do
-              v80.image.Position = UDim2.new(udim2.X.Scale, udim2.X.Offset + v80.x, udim2.Y.Scale, udim2.Y.Offset + v80.y)
-              v80.image.Rotation = rotation
-            end
-
-            if v79 then
-              v79.image.Position = udim2
-              v79.image.Rotation = rotation
-            end
-          end
-        end
-
-        local tbl54 = { pieces = {}, layers = {}, birds = {}, sunLayers = {} }
-        local tbl55 = {}
-        local tbl56 = { id = 109352181830543, role = "torso", pivot = Vector2.new(0.5, 0.53) }
-        local tbl57 = {
-          id = 122114082580659,
-          role = "torsoOverlay",
-          pivot = Vector2.new(0.5, 0.53),
-          parent = "torso",
-        }
-
-        local tbl58 = {
-          id = 139479809590896,
-          role = "straightLeg",
-          pivot = Vector2.new(0.5537, 0.4321),
-          parent = "torso",
-        }
-
-        local tbl59 = {
-          id = 100210458187990,
-          role = "straightBoot",
-          pivot = Vector2.new(0.112, 0.2012),
-          parent = "straightLeg",
-        }
-
-        local tbl60 = {
-          id = 78084312740336,
-          role = "bentLeg",
-          pivot = Vector2.new(0.4586, 0.4857),
-          parent = "torso",
-        }
-        local tbl61 = {
-          id = 73089083195386,
-          role = "bentBoot",
-          pivot = Vector2.new(0.2577, 0.456),
-          parent = "bentLeg",
-        }
-        local tbl62 = {
-          id = 106466482082324,
-          role = "leftHand",
-          pivot = Vector2.new(0.135, 0.6286),
-          parent = "torso",
-        }
-        local tbl63 = {
-          id = 105145816596875,
-          role = "rightHand",
-          pivot = Vector2.new(0.8436, 0.5786),
-          parent = "torso",
-        }
-        local tbl64 = {
-          id = 119573317226147,
-          role = "head",
-          pivot = Vector2.new(0.6503, 0.7274),
-          parent = "torso",
-        }
-        local tbl65 = {
-          id = 92470817410025,
-          role = "hair",
-          pivot = Vector2.new(0.684, 0.8095),
-          parent = "head",
-        }
-        tbl55[1] = tbl56
-        tbl55[2] = tbl57
-        tbl55[3] = tbl58
-        tbl55[4] = tbl59
-        tbl55[5] = tbl60
-        tbl55[6] = tbl61
-        tbl55[7] = tbl62
-        tbl55[8] = tbl63
-        tbl55[9] = tbl64
-        tbl55[10] = tbl65
-        local frame4 = Instance.new("Frame")
-        frame4.Name = "GojoCutoutStage"
-        frame4.BackgroundTransparency = 1
-        frame4.BorderSizePixel = 0
-        frame4.AnchorPoint = Vector2.new(0.5, 0.5)
-        frame4.Position = UDim2.new(0.5, 0, 0.42, 0)
-        frame4.Size = flag28 and UDim2.new(0.76, 0, 0, 312) or UDim2.new(0.92, 0, 0.62, 0)
-        frame4.Rotation = -38
-        frame4.ClipsDescendants = false
-        frame4.Visible = sevenupCurrentIntroVariant == "gojo"
-        frame4.ZIndex = 1000
-        frame4.Parent = frame2
-        tbl54.stage = frame4
-        local uiAspectRatioConstraint2 = Instance.new("UIAspectRatioConstraint")
-        uiAspectRatioConstraint2.Name = "GojoSourceAspect"
-        uiAspectRatioConstraint2.AspectRatio = 0.77619047619047621
-        uiAspectRatioConstraint2.DominantAxis = Enum.DominantAxis.Height
-        uiAspectRatioConstraint2.Parent = frame4
-        local uiScale3 = Instance.new("UIScale")
-        uiScale3.Name = "GojoScale"
-        uiScale3.Scale = 1
-        uiScale3.Parent = frame4
-        tbl54.scale = uiScale3
-        tbl54.active = false
-
-        for i, v79 in ipairs(tbl55) do
-          local instance2 = Instance.new("Frame")
-          instance2.Name = "GojoJoint_" .. v79.role
-          instance2.BackgroundTransparency = 1
-          instance2.BorderSizePixel = 0
-          instance2.AnchorPoint = Vector2.new(0.5, 0.5)
-          local parent = v79.parent and tbl54.layers[v79.parent]
-
-          if parent then
-            instance2.Position = UDim2.fromScale(0.5 + v79.pivot.X - parent.pivot.X, 0.5 + v79.pivot.Y - parent.pivot.Y)
-          else
-            instance2.Position = UDim2.fromScale(v79.pivot.X, v79.pivot.Y)
-          end
-
-          instance2.Size = UDim2.fromScale(1, 1)
-          instance2.ZIndex = 1000 + i
-          instance2.Parent = parent and parent.image or frame4
-          local imageLabel3 = Instance.new("ImageLabel")
-          imageLabel3.Name = "Gojo_" .. v79.role
-          imageLabel3.BackgroundTransparency = 1
-          imageLabel3.BorderSizePixel = 0
-          imageLabel3.Image = "rbxassetid://" .. tostring(v79.id)
-          imageLabel3.ImageColor3 = Color3.fromRGB(255, 240, 255)
-          imageLabel3.ImageTransparency = 1
-          imageLabel3.ScaleType = Enum.ScaleType.Stretch
-          imageLabel3.AnchorPoint = Vector2.new(0, 0)
-          imageLabel3.Position = UDim2.fromScale(0.5 - v79.pivot.X, 0.5 - v79.pivot.Y)
-          imageLabel3.Size = UDim2.fromScale(1, 1)
-          imageLabel3.ZIndex = 1000 + i
-          imageLabel3.Parent = instance2
-          tbl54.pieces[i] = imageLabel3
-          tbl54.layers[v79.role] = { image = instance2, pivot = v79.pivot, basePosition = instance2.Position }
-        end
-
-        tbl54.addBird = function(arg)
-          local n34 = flag28 and 18 or 34
-          local frame5 = Instance.new("Frame")
-          frame5.Name = "GojoBird" .. arg
-          frame5.BackgroundTransparency = 1
-          frame5.BorderSizePixel = 0
-          frame5.AnchorPoint = Vector2.new(0.5, 0.5)
-          frame5.Position = UDim2.fromScale(0.5, 0.42)
-          frame5.Size = UDim2.fromOffset(n34, math.floor(n34 * 0.56))
-          frame5.Visible = sevenupCurrentIntroVariant == "gojo"
-          frame5.ZIndex = 1015
-          frame5.Parent = frame2
-          local n35 = math.floor(n34 * 0.58)
-          local n36 = flag28 and 2 or 3
-          local frame6 = Instance.new("Frame")
-          frame6.Name = "LeftWing"
-          frame6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-          frame6.BackgroundTransparency = 1
-          frame6.BorderSizePixel = 0
-          frame6.AnchorPoint = Vector2.new(0.5, 0.5)
-          frame6.Position = UDim2.new(0.5, -n35 * 0.23, 0.5, 0)
-          frame6.Size = UDim2.fromOffset(n35, n36)
-          frame6.Rotation = 22
-          frame6.ZIndex = frame5.ZIndex
-          frame6.Parent = frame5
-          local uiCorner = Instance.new("UICorner")
-          uiCorner.CornerRadius = UDim.new(1, 0)
-          uiCorner.Parent = frame6
-          local clone = frame6:Clone()
-          clone.Name = "RightWing"
-          clone.Position = UDim2.new(0.5, n35 * 0.23, 0.5, 0)
-          clone.Rotation = -22
-          clone.Parent = frame5
-          local clone2 = frame6:Clone()
-          clone2.Name = "LeftFeather"
-          clone2.Position = UDim2.new(0.5, -n35 * 0.3, 0.5, n36 * 1.15)
-          local max = math.max
-          clone2.Size = UDim2.fromOffset(math.floor(n35 * 0.68), max(1, n36 - 1))
-          clone2.Rotation = 34
-          clone2.Parent = frame5
-          local clone3 = clone2:Clone()
-          clone3.Name = "RightFeather"
-          clone3.Position = UDim2.new(0.5, n35 * 0.3, 0.5, n36 * 1.15)
-          clone3.Rotation = -34
-          clone3.Parent = frame5
-          local uiScale4 = Instance.new("UIScale")
-          local scale = 0.76 + arg % 4 * 0.1
-          uiScale4.Scale = scale
-          uiScale4.Parent = frame5
-
-          tbl54.birds[arg] = {
-            frame = frame5,
-            leftWing = frame6,
-            rightWing = clone,
-            leftFeather = clone2,
-            rightFeather = clone3,
-            scale = uiScale4,
-            baseScale = scale,
-            phase = (arg - 1) / 6 * 3.1415926535897931 * 2,
-            radiusX = 0.22 + arg % 3 * 0.045,
-            radiusY = 0.13 + arg % 2 * 0.045,
-            speed = 0.2 + arg % 3 * 0.025,
-          }
-        end
-
-        for i = 1, 6 do
-          tbl54.addBird(i)
-        end
-
-        tbl54.addAtmosphere = function()
-          local frame5 = Instance.new("Frame")
-          frame5.Name = "GojoGoldenSun"
-          frame5.BackgroundTransparency = 1
-          frame5.BorderSizePixel = 0
-          frame5.AnchorPoint = Vector2.new(0.5, 0.5)
-          frame5.Position = UDim2.fromScale(0.5, 0.43)
-          frame5.Size = flag28 and UDim2.fromOffset(260, 260) or UDim2.fromOffset(500, 500)
-          frame5.Visible = sevenupCurrentIntroVariant == "gojo"
-          frame5.ZIndex = 950
-          frame5.Parent = frame2
-          tbl54.sunRoot = frame5
-          local uiScale4 = Instance.new("UIScale")
-          uiScale4.Scale = 1
-          uiScale4.Parent = frame5
-          tbl54.sunScale = uiScale4
-          local tbl66 = {}
-          local tbl67 = { size = 1.1, color = Color3.fromRGB(240, 126, 22), target = 0.9 }
-          local tbl68 = { size = 1.03, color = Color3.fromRGB(255, 177, 35), target = 0.76 }
-          local tbl69 = { size = 0.96, color = Color3.fromRGB(255, 218, 77), target = 0.4 }
-          tbl66[1] = tbl67
-          tbl66[2] = tbl68
-          tbl66[3] = tbl69
-
-          for i, v79 in ipairs(tbl66) do
-            local instance2 = Instance.new("Frame")
-            instance2.Name = "GoldenSunLayer" .. i
-            instance2.BackgroundColor3 = v79.color
-            instance2.BackgroundTransparency = 1
-            instance2.BorderSizePixel = 0
-            instance2.AnchorPoint = Vector2.new(0.5, 0.5)
-            instance2.Position = UDim2.fromScale(0.5, 0.5)
-            instance2.Size = UDim2.fromScale(v79.size, v79.size)
-            instance2.ZIndex = frame5.ZIndex + i
-            instance2.Parent = frame5
-            local instance3 = Instance.new("UICorner")
-            instance3.CornerRadius = UDim.new(1, 0)
-            instance3.Parent = instance2
-
-            if i == #tbl66 then
-              local uiGradient = Instance.new("UIGradient")
-              local colorSequence = ColorSequence.new
-              local tbl70 = {}
-              local v80 = ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 137))
-              local v81 = ColorSequenceKeypoint.new(0.48, Color3.fromRGB(255, 205, 54))
-              tbl70[1] = v80
-              tbl70[2] = v81
-
-              do
-                local values = table.pack(ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 126, 7)))
-                table.move(values, 1, values.n, 3, tbl70)
+            lastSkipPress = now
+            skipHint.Text = "ONE MORE CLICK TO SKIP"
+            skipHint.TextTransparency = 0
+            task.delay(0.42, function()
+              if active and now == lastSkipPress and skipHint.Parent then
+                skipHint.Text = "DOUBLE CLICK / DOUBLE TAP ANYWHERE TO SKIP"
+                skipHint.TextTransparency = 0.08
               end
-
-              uiGradient.Color = colorSequence(tbl70)
-              uiGradient.Rotation = 48
-              uiGradient.Parent = instance2
-            end
-
-            tbl54.sunLayers[i] = { frame = instance2, target = v79.target }
-          end
-        end
-
-        tbl54.addAtmosphere()
-        local instance2 = Instance.new("ImageLabel")
-        instance2.Name = "IntroBanner"
-        instance2.BackgroundTransparency = 1
-        instance2.Image = "rbxassetid://106301188411771"
-        instance2.ImageColor3 = Color3.fromRGB(255, 240, 255)
-        instance2:SetAttribute("_NoSevenUpTheme", true)
-        instance2.ImageTransparency = 1
-        instance2.ScaleType = Enum.ScaleType.Fit
-        instance2.AnchorPoint = Vector2.new(0.5, 0.5)
-        instance2.Position = UDim2.new(0.5, 0, 0.42, 0)
-        instance2.Size = flag28 and UDim2.new(0.38, 0, 0, 78) or UDim2.new(0.92, 0, 0, 170)
-        instance2.ZIndex = 1002
-        instance2.Parent = frame2
-        local textLabel = Instance.new("TextLabel")
-        textLabel.Name = "TapAnywhere"
-        textLabel.BackgroundTransparency = 1
-        textLabel.Text = "TAP ANYWHERE TO SKIP"
-        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        textLabel.TextTransparency = 1
-        textLabel.TextSize = flag28 and 18 or 44
-        textLabel.Font = Enum.Font.GothamBlack
-        textLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-        textLabel.Position = flag28 and UDim2.new(0.5, 0, 0.42, 58) or UDim2.fromScale(0.5, 0.82)
-        textLabel.Size = UDim2.new(0.7, 0, 0, 20)
-        textLabel.TextXAlignment = Enum.TextXAlignment.Center
-        textLabel.ZIndex = 1003
-        textLabel.Parent = frame2
-        local textLabel2 = Instance.new("TextLabel")
-        textLabel2.Name = "DiscordInvite"
-        textLabel2.BackgroundTransparency = 1
-        textLabel2.Text = "DISCORD.GG/7UP"
-        textLabel2.TextColor3 = Color3.fromRGB(255, 255, 255)
-        textLabel2.TextTransparency = 1
-        textLabel2.TextSize = flag28 and 12 or 40
-        textLabel2.Font = Enum.Font.GothamBlack
-        textLabel2.AnchorPoint = Vector2.new(0.5, 0.5)
-        textLabel2.Position = flag28 and UDim2.new(0.5, 0, 0.42, 80) or UDim2.fromScale(0.5, 0.89)
-        textLabel2.Size = UDim2.new(0.7, 0, 0, 18)
-        textLabel2.TextXAlignment = Enum.TextXAlignment.Center
-        textLabel2.ZIndex = 1003
-        textLabel2.Parent = frame2
-        local frame5 = Instance.new("Frame")
-        frame5.Name = "IntroCaptionShield"
-        frame5.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
-        frame5.BackgroundTransparency = 1
-        frame5.BorderSizePixel = 0
-        frame5.AnchorPoint = Vector2.new(0.5, 0.5)
-        frame5.Position = UDim2.new(0.5, 0, 0.42, flag28 and 70 or 124)
-        frame5.Size = UDim2.new(0.58, 0, 0, 48)
-        frame5.ZIndex = 1002
-        frame5.Parent = frame2
-        frame5.Visible = false
-        local instance3 = Instance.new("UICorner")
-        instance3.CornerRadius = UDim.new(0, 14)
-        instance3.Parent = frame5
-        local uiGradient = Instance.new("UIGradient")
-        local numberSequence = NumberSequence.new
-        local tbl66 = {}
-        local v79 = NumberSequenceKeypoint.new(0, 0.94)
-        local v80 = NumberSequenceKeypoint.new(0.16, 0.14)
-        local v81 = NumberSequenceKeypoint.new(0.84, 0.14)
-        local new = NumberSequenceKeypoint.new
-        tbl66[1] = v79
-        tbl66[2] = v80
-        tbl66[3] = v81
-
-        do
-          local values = table.pack(new(1, 0.94))
-          table.move(values, 1, values.n, 4, tbl66)
-        end
-
-        uiGradient.Transparency = numberSequence(tbl66)
-        uiGradient.Parent = frame5
-        local textButton = Instance.new("TextButton")
-        textButton.Name = "TapCatcher"
-        textButton.BackgroundTransparency = 1
-        textButton.Text = ""
-        textButton.AutoButtonColor = false
-        textButton.Size = UDim2.new(1, 0, 1, 0)
-        textButton.ZIndex = 1004
-        textButton.Parent = frame2
-        local blurEffect = Instance.new("BlurEffect")
-        blurEffect.Name = "SevenUpIntroBlur"
-        blurEffect:SetAttribute("_SevenUpIntroEffect", true)
-        blurEffect.Size = 0
-        blurEffect.Parent = Lighting_2
-        local flag29 = false
-        local flag30 = false
-        local flag31 = false
-        local flag32 = false
-        local flag33 = false
-        local connection2 = nil
-        local v82 = nil
-        local v83 = nil
-
-        _G._SevenUpIntroCleanup = function()
-          flag29 = true
-          flag31 = false
-          flag32 = false
-          flag33 = false
-          tbl54.active = false
-
-          if connection2 then
-            connection2:Disconnect()
-            connection2 = nil
-          end
-
-          _G._SevenUpIntroPlaying = false
-
-          if v82 and v82.Parent then
-            v82:Destroy()
-          end
-
-          if v83 and v83.Parent then
-            v83:Destroy()
-          end
-
-          if frame2 and frame2.Parent then
-            frame2:Destroy()
-          end
-
-          if blurEffect and blurEffect.Parent then
-            blurEffect:Destroy()
-          end
-        end
-
-        local function fn57()
-          flag31 = true
-          local rotation = imageLabel.Rotation
-
-          while flag31 and not flag29 do
-            rotation += 50
-            TweenService:Create(imageLabel, TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Rotation = rotation }):Play()
-            TweenService:Create(uiScale, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.035 }):Play()
-            task.wait(0.14)
-            TweenService:Create(uiScale, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-            task.wait(0.78)
-          end
-        end
-
-        local function fn58()
-          flag32 = true
-          local n34 = 0
-          local v84 = 0
-          local v85 = nil
-          local n35 = nil
-          local n36 = nil
-          local v86 = nil
-          local n37 = nil
-
-          connection2 = RunService.RenderStepped:Connect(function(deltaTime)
-            if not flag32 or flag29 then
-              return
-            end
-            v84 += deltaTime
-            local n38, n39, n40
-
-            if v84 <= 2.1 then
-              n34 = (n34 + deltaTime * 1920 * -1) % 360
-              n38 = n34
-              n39 = 1
-              local parent = v83 and v83.Parent
-              n40 = -1
-
-              if parent then
-                v83.PlaybackSpeed = 1
-              end
-            elseif v84 <= 3.3 then
-              local n41 = (v84 - 2.1) / 1.2
-
-              if not v85 then
-                v85 = n34
-                n35 = 82
-
-                while (n35 - v85) * -1 < 1180 do
-                  n35 += -360
-                end
-
-                n36 = n35 - 230
-              end
-
-              local n42 = n41 * n41
-              local n43 = n42 * n41
-              n38 = (2 * n43 - 3 * n42 + 1) * v85 + (n43 - 2 * n42 + n41) * -2304 + (-2 * n43 + 3 * n42) * n35 + (n43 - n42) * -384
-              n34 = n38
-              local n44 = ((6 * n42 - 6 * n41) * v85 + (3 * n42 - 4 * n41 + 1) * -2304 + (-6 * n42 + 6 * n41) * n35 + (3 * n42 - 2 * n41) * -384) / 1.2
-              n39 = math.clamp(math.abs(n44) / 1920, 0.16, 1)
-              n40 = n44 >= 0 and 1 or -1
-
-              if v83 and v83.Parent then
-                local v87 = 0
-                v83.PlaybackSpeed = 0.35 + 0.45 * math.clamp(math.abs(n44) / 1920, v87, 1)
-              end
-            elseif v84 <= 5.8 then
-              n36 = n36 or -34
-
-              if not v86 then
-                v86 = n35
-                n37 = -320
-              end
-
-              n37 += math.sin(math.rad((n36 - v86 + 180) % 360 - 160)) * 1100 * deltaTime
-              n37 *= math.exp(-2.8 * deltaTime)
-              v86 += n37 * deltaTime
-              n38 = v86
-              n40 = n37 >= 0 and 1 or -1
-              n39 = math.clamp(math.abs(n37) / 900, 0, 0.3)
-
-              if v83 and v83.Parent then
-                v83.PlaybackSpeed = 0.5 + 0.22 * math.clamp(math.abs(n37) / 320, 0, 1)
-              end
-            else
-              n38 = n36 or -34
-              n39 = 0
-              local parent = v83 and v83.Parent
-              n40 = 1
-
-              if parent then
-                v83.PlaybackSpeed = 0.5
-              end
-            end
-
-            for i, v87 in ipairs(tbl39) do
-              local flag34 = i == #tbl39
-              v87.Rotation = n38 + tbl41[i] * n39 * n40
-
-              if v84 > 2.1 and not flag34 then
-                local v88 = tbl42[i]
-                tbl40[i].ImageTransparency = v88 + (1 - v88) * (1 - n39)
-              end
-            end
-          end)
-        end
-
-        local function fn59()
-          flag33 = true
-
-          task.spawn(function()
-            for _, v84 in ipairs(tbl50) do
-              fn56(v84, UDim2.new(0.5, -1, 0.5, -3), -1)
-            end
-
-            task.wait(0.18)
-            if not flag33 or flag29 then
-              return
-            end
-            local flag34 = false
-
-            while flag33 and not flag29 do
-              flag34 = not flag34
-              local udim2 = flag34 and UDim2.new(0.5, -1, 0.5, -2) or UDim2.new(0.5, 1, 0.5, 1)
-              local n34 = flag34 and -1 or 1
-
-              for _, v84 in ipairs(tbl50) do
-                fn56(v84, udim2, n34, TweenInfo.new(1.05, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut))
-              end
-
-              local udim22 = flag34 and UDim2.new(0.5, -2, 0.5, -3) or UDim2.new(0.5, 2, 0.5, 2)
-              local n35 = flag34 and -2 or 2
-
-              for _, v84 in ipairs(tbl51) do
-                fn56(v84, udim22, n35, TweenInfo.new(1.05, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut))
-              end
-
-              task.wait(1.08)
-            end
-          end)
-        end
-
-        tbl54.play = function()
-          tbl54.active = true
-
-          task.spawn(function()
-            local now2 = os.clock()
-            local layers = tbl54.layers
-
-            while tbl54.active and not flag29 do
-              local n34 = (os.clock() - now2) * 2.5
-              local v84 = math.sin(n34 * 0.82)
-              local v85 = math.sin(n34 * 0.68 + 0.45)
-              tbl54.stage.Position = UDim2.new(0.5, math.sin(n34 * 0.57 + 0.8) * 4, 0.42, v84 * 6)
-              tbl54.stage.Rotation = -38 + v85 * 1.15
-              tbl54.scale.Scale = 1 + math.sin(n34 * 0.73 + 1.2) * 0.014
-              local v86 = 0.62
-              layers.torso.image.Rotation = math.sin(n34 * 0.76) * v86
-              layers.head.image.Rotation = math.sin(n34 * 0.92 + 0.65) * 1.55
-              layers.hair.image.Rotation = math.sin(n34 * 1.08 + 1.1) * 0.85
-              layers.leftHand.image.Rotation = math.sin(n34 * 0.88 + 0.25) * 3.25
-              layers.rightHand.image.Rotation = math.sin(n34 * 0.96 + 2.35) * 3.15
-              layers.straightLeg.image.Rotation = math.sin(n34 * 0.72 + 0.2) * 4
-              layers.straightBoot.image.Rotation = math.sin(n34 * 0.91 + 0.75) * 1.25
-              layers.bentLeg.image.Rotation = math.sin(n34 * 0.79 + 3.05) * 4.15
-              layers.bentBoot.image.Rotation = math.sin(n34 * 0.98 + 3.55) * 1.35
-
-              for _, bird in ipairs(tbl54.birds) do
-                local n35 = n34 * bird.speed + bird.phase
-                local n36 = math.sin(n34 * 3.8 + bird.phase) * 7.5
-                local n37 = (math.sin(n35) + 1) * 0.5
-                local radiusX = bird.radiusX
-                local radiusY = bird.radiusY
-                bird.frame.Position = UDim2.fromScale(0.5 + math.cos(n35) * radiusX, 0.42 + math.sin(n35 * 1.08) * radiusY + math.sin(n34 * 1.3 + bird.phase) * 0.012)
-                bird.frame.Rotation = math.sin(n35 * 1.7) * 5
-                bird.scale.Scale = bird.baseScale * (0.91 + n37 * 0.13)
-                bird.leftWing.Rotation = 20 + n36
-                bird.rightWing.Rotation = -24 - n36
-                bird.leftFeather.Rotation = 32 + n36 * 0.72
-                bird.rightFeather.Rotation = -32 - n36 * 0.72
-              end
-
-              tbl54.sunScale.Scale = 1 + math.sin(n34 * 0.18 + 0.6) * 0.018
-              RunService.RenderStepped:Wait()
-            end
-          end)
-        end
-
-        local function fn60()
-          if not flag30 or flag29 then
-            return
-          end
-          flag29 = true
-          flag31 = false
-          flag32 = false
-          flag33 = false
-          tbl54.active = false
-
-          if connection2 then
-            connection2:Disconnect()
-            connection2 = nil
-          end
-
-          if v82 and v82.Parent then
-            TweenService:Create(v82, TweenInfo.new(0.5, Enum.EasingStyle.Linear), { Volume = 0 }):Play()
-
-            task.delay(0.5, function()
-              if v82 and v82.Parent then
-                v82:Destroy()
-              end
-            end)
-          end
-
-          if v83 and v83.Parent then
-            TweenService:Create(v83, TweenInfo.new(0.5, Enum.EasingStyle.Linear), { Volume = 0 }):Play()
-
-            task.delay(0.5, function()
-              if v83 and v83.Parent then
-                v83:Destroy()
-              end
-            end)
-          end
-
-          local tweenInfo = TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-          TweenService:Create(frame2, tweenInfo, { BackgroundTransparency = 1 }):Play()
-          TweenService:Create(instance2, tweenInfo, { ImageTransparency = 1 }):Play()
-
-          if sevenupCurrentIntroVariant == "gojo" then
-            if tbl54.scale then
-              TweenService:Create(tbl54.scale, tweenInfo, { Scale = 0.06 }):Play()
-            end
-
-            if tbl54.sunScale then
-              TweenService:Create(tbl54.sunScale, tweenInfo, { Scale = 0.06 }):Play()
-            end
-          end
-
-          if sevenupCurrentIntroVariant == "wheel" then
-            local tbl67 = { Rotation = imageLabel.Rotation + 90 }
-            TweenService:Create(imageLabel, TweenInfo.new(0.42, Enum.EasingStyle.Linear), tbl67):Play()
-          end
-
-          TweenService:Create(imageLabel, tweenInfo, { ImageTransparency = 1 }):Play()
-
-          for _, v84 in ipairs(tbl40) do
-            TweenService:Create(v84, tweenInfo, { ImageTransparency = 1 }):Play()
-          end
-
-          for _, v84 in ipairs(tbl43) do
-            TweenService:Create(v84, tweenInfo, { ImageTransparency = 1 }):Play()
-            local v85 = ipairs
-            local tbl67 = tbl44[v84] or {}
-
-            for _, v86 in v85(tbl67) do
-              TweenService:Create(v86.image, tweenInfo, { ImageTransparency = 1 }):Play()
-            end
-
-            local v86 = ipairs
-            local tbl68 = tbl45[v84] or {}
-
-            for _, v87 in v86(tbl68) do
-              TweenService:Create(v87.image, tweenInfo, { ImageTransparency = 1 }):Play()
-            end
-
-            local v87 = tbl46[v84]
-
-            if v87 then
-              if v87.gradientTween then
-                v87.gradientTween:Cancel()
-              end
-
-              if v87.pulseTween then
-                v87.pulseTween:Cancel()
-              end
-
-              TweenService:Create(v87.image, tweenInfo, { ImageTransparency = 1 }):Play()
-            end
-          end
-
-          TweenService:Create(imageLabel2, tweenInfo, { ImageTransparency = 1 }):Play()
-
-          for _, piece in ipairs(tbl54.pieces) do
-            TweenService:Create(piece, tweenInfo, { ImageTransparency = 1 }):Play()
-          end
-
-          for _, bird in ipairs(tbl54.birds) do
-            TweenService:Create(bird.leftWing, tweenInfo, { BackgroundTransparency = 1 }):Play()
-            TweenService:Create(bird.rightWing, tweenInfo, { BackgroundTransparency = 1 }):Play()
-            TweenService:Create(bird.leftFeather, tweenInfo, { BackgroundTransparency = 1 }):Play()
-            TweenService:Create(bird.rightFeather, tweenInfo, { BackgroundTransparency = 1 }):Play()
-          end
-
-          for _, sunLayer in ipairs(tbl54.sunLayers) do
-            TweenService:Create(sunLayer.frame, tweenInfo, { BackgroundTransparency = 1 }):Play()
-          end
-
-          TweenService:Create(frame5, tweenInfo, { BackgroundTransparency = 1 }):Play()
-          TweenService:Create(textLabel, tweenInfo, { TextTransparency = 1 }):Play()
-          TweenService:Create(textLabel2, tweenInfo, { TextTransparency = 1 }):Play()
-          TweenService:Create(blurEffect, tweenInfo, { Size = 0 }):Play()
-
-          task.delay(0.42, function()
-            if frame2 and frame2.Parent then
-              frame2:Destroy()
-            end
-
-            if blurEffect and blurEffect.Parent then
-              blurEffect:Destroy()
-            end
-
-            _G._SevenUpIntroPlaying = false
-            local sevenupRevealMainAfterIntro = _G._SevenUpRevealMainAfterIntro
-            _G._SevenUpRevealMainAfterIntro = nil
-
-            if sevenupRevealMainAfterIntro then
-              sevenupRevealMainAfterIntro()
-            end
-          end)
-        end
-
-        textButton.Activated:Connect(fn60)
-
-        local function fn61()
-          if flag30 or flag29 then
-            return false
-          end
-          flag30 = true
-          frame2.Visible = true
-          TweenService:Create(frame2, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0.5 }):Play()
-          TweenService:Create(blurEffect, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = 10 }):Play()
-          TweenService:Create(instance2, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
-
-          if sevenupCurrentIntroVariant == "wheel" then
-            TweenService:Create(imageLabel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
-          elseif sevenupCurrentIntroVariant == "chainSpear" then
-            instance.Visible = true
-
-            for _, v84 in ipairs(tbl40) do
-              v84.Visible = true
-              TweenService:Create(v84, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = v84:GetAttribute("_SevenUpTargetTransparency") }):Play()
-            end
-          elseif sevenupCurrentIntroVariant == "gojo" then
-            tbl54.stage.Visible = true
-            tbl54.sunRoot.Visible = true
-
-            for _, sunLayer in ipairs(tbl54.sunLayers) do
-              local tbl67 = { BackgroundTransparency = sunLayer.target }
-              TweenService:Create(sunLayer.frame, TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), tbl67):Play()
-            end
-
-            for i, piece in ipairs(tbl54.pieces) do
-              task.delay((i - 1) * 0.03, function()
-                if not flag29 and piece.Parent then
-                  TweenService:Create(piece, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
-                end
-              end)
-            end
-
-            for i, bird in ipairs(tbl54.birds) do
-              bird.frame.Visible = true
-
-              task.delay(0.08 + (i - 1) * 0.055, function()
-                if not flag29 and bird.frame.Parent then
-                  TweenService:Create(bird.leftWing, TweenInfo.new(0.3), { BackgroundTransparency = 0.04 }):Play()
-                  TweenService:Create(bird.rightWing, TweenInfo.new(0.25), { BackgroundTransparency = 0.04 }):Play()
-                  TweenService:Create(bird.leftFeather, TweenInfo.new(0.3), { BackgroundTransparency = 0.22 }):Play()
-                  TweenService:Create(bird.rightFeather, TweenInfo.new(0.3), { BackgroundTransparency = 0.22 }):Play()
-                end
-              end)
-            end
-          else
-            local tbl67 = { ImageTransparency = 0 }
-            TweenService:Create(imageLabel2, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), tbl67):Play()
-
-            for i, v84 in ipairs(tbl43) do
-              task.delay((i - 1) * 0.035, function()
-                if not flag29 and v84.Parent then
-                  local tbl68 = { ImageTransparency = 0 }
-                  TweenService:Create(v84, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), tbl68):Play()
-                  local v85 = ipairs
-                  local tbl69 = tbl44[v84] or {}
-
-                  for _, v86 in v85(tbl69) do
-                    TweenService:Create(v86.image, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0.15 }):Play()
-                  end
-
-                  local v86 = ipairs
-                  local tbl70 = tbl45[v84] or {}
-
-                  for _, v87 in v86(tbl70) do
-                    local tbl71 = { ImageTransparency = 0 }
-                    TweenService:Create(v87.image, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), tbl71):Play()
-                  end
-
-                  local v87 = tbl46[v84]
-
-                  if v87 then
-                    TweenService:Create(v87.image, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0.25 }):Play()
-                    v87.gradient.Offset = Vector2.new(-1, 0)
-                    v87.gradientTween = TweenService:Create(v87.gradient, TweenInfo.new(1.15, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true), { Offset = Vector2.new(1, 0) })
-                    v87.gradientTween:Play()
-                    v87.pulseTween = TweenService:Create(v87.image, TweenInfo.new(0.72, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { ImageTransparency = 0.58 })
-                    v87.pulseTween:Play()
-                  end
-                end
-              end)
-            end
-          end
-
-          TweenService:Create(frame5, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0.08 }):Play()
-          TweenService:Create(textLabel, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0.05 }):Play()
-          TweenService:Create(textLabel2, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0.05 }):Play()
-
-          if sevenupCurrentIntroVariant == "wheel" then
-            task.spawn(fn57)
-          elseif sevenupCurrentIntroVariant == "chainSpear" then
-            fn58()
-          elseif sevenupCurrentIntroVariant == "gojo" then
-            tbl54.play()
-          else
-            fn59()
-          end
-
-          task.delay(6, fn60)
-          return true
-        end
-
-        fn61()
-
-        task.defer(function()
-          RunService.RenderStepped:Wait()
-
-          playIntroMusic(function(arg)
-            if flag29 then
-              return false
-            end
-            v82 = arg
-            return true
-          end)
-
-          if sevenupCurrentIntroVariant == "chainSpear" then
-            playChainSpearAudio(function(arg)
-              if flag29 then
-                return false
-              end
-              v83 = arg
-              return true
             end)
           end
         end)
+
+        task.spawn(function()
+          tween(root, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, {BackgroundTransparency = 0.02})
+          tween(topCopy, 0.6, nil, nil, {TextTransparency = 0})
+          tween(canAssembly, 0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {Position = UDim2.new(0.5, 0, 0.46, 0), Rotation = 0})
+          tween(canScale, 0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {Scale = fit})
+          if not aliveWait(1.35) then return end
+
+          tween(canAssembly, 0.11, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, {Rotation = -4})
+          if not aliveWait(0.13) then return end
+          tween(canAssembly, 0.11, nil, nil, {Rotation = 4})
+          if not aliveWait(0.13) then return end
+          tween(canAssembly, 0.11, nil, nil, {Rotation = -2})
+          if not aliveWait(0.13) then return end
+          tween(canAssembly, 0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {Rotation = 0})
+          if not aliveWait(0.62) then return end
+
+          pcall(function()
+            if _G._K7IntroPlaybackSound and _G._K7IntroPlaybackSound.Parent then
+              tween(_G._K7IntroPlaybackSound, 0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, {Volume = 0.18})
+            end
+            openSfx.TimePosition = 0
+            openSfx:Play()
+          end)
+          task.delay(1.4, function()
+            if active and _G._K7IntroPlaybackSound and _G._K7IntroPlaybackSound.Parent then
+              tween(_G._K7IntroPlaybackSound, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, {Volume = 0.7})
+            end
+          end)
+          tween(pullTab, 0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {Rotation = -48, Position = UDim2.new(0.5, 1, 0.5, -8)})
+          tween(lid, 0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {Position = UDim2.new(0, 26, 0, 24), Rotation = 2})
+          tween(openingCore, 0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, {Size = UDim2.new(0, 118, 0, 42), BackgroundTransparency = 0.3})
+          tween(glow, 0.32, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, {Size = UDim2.new(0, 820, 0, 820), BackgroundTransparency = 0.8})
+          tween(fizzText, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.22, -10), Rotation = 2})
+          for _, data in ipairs(bubbles) do
+            task.delay(data.delay, function()
+              if not active or not data.obj.Parent then return end
+              data.obj.Size = UDim2.new(0, data.size, 0, data.size)
+              tween(data.obj, 0.8 + data.delay, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, {
+                Position = UDim2.new(0.5, data.endX, 0.46, data.endY),
+                Size = UDim2.new(0, data.size * 1.55, 0, data.size * 1.55),
+                BackgroundTransparency = 1
+              })
+            end)
+          end
+          if not aliveWait(0.78) then return end
+          tween(fizzText, 0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, {TextTransparency = 1, Position = UDim2.new(0.5, 0, 0.18, -30)})
+          tween(openingCore, 0.5, nil, nil, {Size = UDim2.new(0, 180, 0, 66), BackgroundTransparency = 1})
+          tween(canScale, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {Scale = fit * 1.035})
+          if not aliveWait(0.5) then return end
+          tween(canScale, 0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {Scale = fit})
+          tween(title, 0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out, {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.79, 0)})
+          tween(subtitle, 0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.86, 0)})
+          if not aliveWait(4.1) then return end
+
+          tween(wipe, 0.62, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, {Size = UDim2.new(0, 2200, 0, 2200)})
+          tween(title, 0.35, nil, nil, {TextTransparency = 1})
+          tween(subtitle, 0.35, nil, nil, {TextTransparency = 1})
+          if not aliveWait(0.78) then return end
+          finishIntro()
+        end)
       end
 
-      _G._SevenUpPlayIntro = sevenupPlayIntro
+      _G._SevenUpPlayIntro = sevenupPlaySodaIntro
+      _G.K7RunIntro = sevenupPlaySodaIntro
 
       if _G._SevenUpIntroEnabled ~= false then
-        sevenupPlayIntro()
+        sevenupPlaySodaIntro()
       else
         _G._SevenUpIntroPlaying = false
       end
@@ -15092,17 +14383,16 @@ local function _SevenUpMain()
         local MusicPlayer = { sound = nil, playing = false, volume = 1.2, songIdx = 1, gui = nil, looped = true, scale = 1 }
         local selectedIntroMusic = 1
         local INTRO_MUSIC_OPTIONS = {
-            {name="Blue Bands", url="https://files.catbox.moe/mzvrir.mp3", file="K7IntroSong_1.mp3"},
-            {name="Legacy", url="https://files.catbox.moe/siru6c.mp3", file="K7IntroSong_2c.mp3"},
-            {name="paznerknacker.wav", url="https://files.catbox.moe/izcvhm.mp3", file="K7IntroSong_3b.mp3"},
-            {name="Tesla", url="https://files.catbox.moe/n85fch.mp3", file="K7IntroSong_4b.mp3"},
-            {name="King Nasir", url="https://files.catbox.moe/etk99y.mp3", file="K7IntroSong_5b.mp3"},
-            {name="Pure Cocaine", url="https://files.catbox.moe/dvjtjk.mp3", file="K7IntroSong_6.mp3"},
-            {name="nuts", url="https://files.catbox.moe/iyw1cb.mp3", file="K7IntroSong_7.mp3"},
-            {name="Gelato", url="https://files.catbox.moe/zf2z42.mp3", file="K7IntroSong_8.mp3"},
-            {name="FREAKED OUT", url="https://files.catbox.moe/dyt2ja.mp3", file="K7IntroSong_9.mp3"},
-            {name="Scam Likely", url="https://files.catbox.moe/pr85mz.mp3", file="K7IntroSong_10.mp3"},
-            {name="NO INTRO MUSIC", silent=true},
+            {name="Legacy", url="https://files.catbox.moe/siru6c.mp3", file="K7IntroSong_20c.mp3"},
+            {name="paznerknacker.wav", url="https://files.catbox.moe/izcvhm.mp3", file="K7IntroSong_21b.mp3"},
+            {name="nuts", url="https://files.catbox.moe/iyw1cb.mp3", file="K7IntroSong_23.mp3"},
+            {name="Meant To Be", url="https://files.catbox.moe/orkiig.mp3", file="K7IntroSong_24.mp3"},
+            {name="Gods Plan", url="https://files.catbox.moe/unnwk5.mp3", file="K7IntroSong_25.mp3"},
+            {name="Ransom", url="https://files.catbox.moe/2vpibd.mp3", file="K7IntroSong_26.mp3"},
+            {name="Ansi Bala Vida", url="https://files.catbox.moe/ksfldz.mp3", file="K7IntroSong_27.mp3"},
+            {name="COOOK PARDON", url="https://files.catbox.moe/wvsv5d.mp3", file="K7IntroSong_28.mp3"},
+            {name="Ispy", url="https://files.catbox.moe/tjojav.mp3", file="K7IntroSong_29.mp3"},
+            {name="Young Madz - Super Funk", url="https://files.catbox.moe/jhtufs.mp3", file="K7IntroSong_30.mp3"},
         }
         local INTRO_SONG_FILE = "K7IntroSongIdx.txt"
         local function saveIntroSongIdx()
@@ -15700,9 +14990,6 @@ local function _SevenUpMain()
       fn63(Utility, "Potato Graphics", { toggle = true })
       fn63(Utility, "FOV Change", { toggle = true })
       fn63(Utility, "FOV Value", { value = "120" })
-      createTextLabel(Utility, "7UP Skin & Outfits")
-      local sevenupHeadlessToggle = fn63(Utility, "Headless", { toggle = true })
-      local sevenupKorbloxToggle  = fn63(Utility, "Korblox", { toggle = true })
             -- ═══════════════════════════════════════════════════════════════
       -- 7UP Skin / Outfit UI
       -- ═══════════════════════════════════════════════════════════════
@@ -15807,7 +15094,11 @@ local function _SevenUpMain()
         local panel = Instance.new("Frame", dim)
         panel.AnchorPoint = Vector2.new(0.5,0.5)
         panel.Position = UDim2.new(0.5,0,0.5,0)
-        panel.Size = UDim2.new(0, 380, 0, 460)
+        local isMobileNow = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+        local vpSize = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,600)
+        local pW = isMobileNow and math.clamp(vpSize.X - 40, 260, 320) or 380
+        local pH = isMobileNow and math.clamp(vpSize.Y - 80, 300, 400) or 460
+        panel.Size = UDim2.new(0, pW, 0, pH)
         panel.BackgroundColor3 = Color3.fromRGB(10,12,15)
         panel.BorderSizePixel = 0
         panel.Active = true; panel.ZIndex = 121
@@ -15920,7 +15211,9 @@ local function _SevenUpMain()
           clone:PivotTo(CFrame.new(0,0,0) * CFrame.Angles(0, math.rad(180), 0))
           local boxCF, boxSize = clone:GetBoundingBox()
           local target = boxCF.Position + Vector3.new(0, boxSize.Y * 0.05, 0)
-          local distance = math.max(boxSize.X, boxSize.Y, boxSize.Z) * 1.35
+          -- Mobile pe aur zoom out taaki avatar frame ke andar fit ho
+          local zoomMult = (UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled) and 2.4 or 1.9
+          local distance = math.max(boxSize.X, boxSize.Y, boxSize.Z) * zoomMult
           cam.CFrame = CFrame.new(target + Vector3.new(0, boxSize.Y * 0.05, distance), target)
         end
 
