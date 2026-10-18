@@ -14196,6 +14196,7 @@ local function _SevenUpMain()
               v103.Color = colorSequence2
             end
 
+            imageLabel.BackgroundTransparency = 1 -- FIX: Black background layer hatane ke liye
             imageLabel2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             imageLabel2.BackgroundTransparency = flag30 and 0 or 1
             imageLabel2.ImageTransparency = flag30 and not flag32 and 0 or 1
