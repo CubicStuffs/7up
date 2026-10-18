@@ -16410,7 +16410,7 @@ local function _SevenUpMain()
               sevenupBtnImage.bg.Image = ""
               sevenupBtnImage.bg.ImageRectSize = Vector2.zero
               sevenupBtnImage.bg.ImageRectOffset = Vector2.zero
-              sevenupBtnImage.bg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+              sevenupBtnImage.bg.BackgroundColor3 = Color3.fromRGB(144, 238, 144) -- Light Green
               sevenupBtnImage.bg.BackgroundTransparency = 0
               local buttonNoneGradient = sevenupBtnImage.bg:FindFirstChild("ButtonNoneGradient")
 
@@ -16420,14 +16420,7 @@ local function _SevenUpMain()
 
               local instance6 = Instance.new("UIGradient")
               instance6.Name = "ButtonNoneGradient"
-              local new = ColorSequenceKeypoint.new
-              local color2 = Color3.fromRGB
-              local v95 = 2
-              local v96 = 10
-              instance6.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(2, 2, 3)),
-                new(1, color2(v95, 2, v96)),
-              })
+              instance6.Transparency = NumberSequence.new(1) -- Gradient ko invisible karo taaki Green dikhe
               instance6.Rotation = 25
               instance6.Parent = sevenupBtnImage.bg
               sevenupBtnImage.glow.Image = ""
