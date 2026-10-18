@@ -3337,8 +3337,8 @@ local function _SevenUpMain()
 
               local billboardGui = Instance.new("BillboardGui", head)
               billboardGui.Name = "SevenUpSpeedBB"
-              billboardGui.Size = UDim2.new(0, 90, 0, 30)
-              billboardGui.StudsOffset = Vector3.new(0, 3.5, 0)
+              billboardGui.Size = UDim2.new(0, 70, 0, 24) -- Size chota kiya
+              billboardGui.StudsOffset = Vector3.new(0, 4.8, 0) -- Thoda upar shift kiya
               billboardGui.AlwaysOnTop = true
               billboardGui.ResetOnSpawn = false
               billboardGui.LightInfluence = 0
@@ -6022,541 +6022,694 @@ local function _SevenUpMain()
         flag25 = false
         HttpService = game:GetService("HttpService")
 
-        do
-          local function fn48()
-            local HttpService2 = game:GetService("HttpService")
-            local str10 = "SevenUpSkin_" .. tostring(localPlayer.UserId) .. ".json"
+                do
+          local HttpService2 = game:GetService("HttpService")
+          local MarketplaceService2 = game:GetService("MarketplaceService")
+          local InsertService2 = game:GetService("InsertService")
 
-            local tbl37 = {
-              SEVENUP = { 10928435480, 6913613757, 9683332649 },
-              RED = {
-                107377896731216,
-                215718515,
-                82831174733357,
-                122851471549264,
-                139051312584295,
-                124572458012582,
-                105029428205930,
-              },
-              BLUE = { 76059443, 74891470, 1180433861, 8781331764, 8682542843 },
-              GALAXY = {
-                82831174733357,
-                139051312584295,
-                107062966543626,
-                71184246276344,
-                111383282415116,
-                78289009309744,
-                71017311084699,
-              },
-            }
+          local HEADLESS_MESH_ID   = "rbxassetid://1095708"
+          local KORBLOX_MESH_ID    = "rbxassetid://101851696"
+          local KORBLOX_TEXTURE_ID = "rbxassetid://101851254"
+          local DARK_GREY_COLOR    = Color3.fromRGB(64, 64, 64)
 
-            local tbl38 = { SEVENUP = { 263995361762992 } }
-            local tbl39 = {}
-            local flag28 = true
-            local str11 = "SEVENUP"
-            local flag29 = false
-            local tbl40 = nil
+          local OUTFIT1_HEAD_MESH = "rbxassetid://137685008029440"
+          local OUTFIT1_SHIRT_ID  = 6281968058
+          local OUTFIT1_PANTS_ID  = 1073888653
+          local OUTFIT2_HEAD_MESH = "rbxassetid://11711107876"
+          local OUTFIT2_SHIRT_ID  = 14101026303
+          local OUTFIT2_PANTS_ID  = 4620736485
+          local OUTFIT3_SHIRT_ID  = 13950309240
+          local OUTFIT3_PANTS_ID  = 12421776639
 
-            local function fn49(arg)
-              local v78 = arg or str11
-              local tbl41 = {}
-              local v79 = ipairs
-              local tbl42 = tbl37[v78] or {}
+          _G._SevenUpHeadlessEnabled    = _G._SevenUpHeadlessEnabled    or false
+          _G._SevenUpKorbloxEnabled     = _G._SevenUpKorbloxEnabled     or false
+          _G._SevenUpOutfit1Applied     = _G._SevenUpOutfit1Applied     or false
+          _G._SevenUpOutfit2Applied     = _G._SevenUpOutfit2Applied     or false
+          _G._SevenUpOutfit3Applied     = _G._SevenUpOutfit3Applied     or false
+          _G._SevenUpCustomSkinEnabled  = _G._SevenUpCustomSkinEnabled  or false
+          _G._SevenUpCustomSkinVariant  = _G._SevenUpCustomSkinVariant  or 1
+          _G._SevenUpOutfitButtonRefreshers = _G._SevenUpOutfitButtonRefreshers or {}
 
-              for _, v80 in v79(tbl42) do
-                tbl41[#tbl41 + 1] = v80
+          local CUSTOM_SKIN_VARIANTS = {
+            [1] = { name="7UP SKIN",  hatId="127854264346577", shirtId=10692517352, pantsId=6294855872, headId=101106043267082, bodyColor=Color3.fromRGB(0,88,39) },
+            [2] = { name="BART SKIN", hatId="127854264346577", shirtId=135553740919809, pantsId=5309277694, headId=18913474191, bodyColor=Color3.fromRGB(245,205,45) },
+          }
+          local CUSTOM_SKIN_TAG           = "SevenUpCustomSkinItem"
+          local CUSTOM_SKIN_SNAPSHOT_ATTR = "SevenUpCustomSkinSnapshot"
+          local CUSTOM_SKIN_SHIRT_ATTR    = "SevenUpOriginalShirt"
+          local CUSTOM_SKIN_PANTS_ATTR    = "SevenUpOriginalPants"
+
+          local CustomSkinAssetCache = {
+            [1] = {shirtTemplate=nil, pantsTemplate=nil, hatTemplate=nil, lastAttempt=0},
+            [2] = {shirtTemplate=nil, pantsTemplate=nil, hatTemplate=nil, lastAttempt=0},
+          }
+          local CustomSkinAssets = CustomSkinAssetCache[1]
+          local CustomSkinSnapshots = setmetatable({}, {__mode = "k"})
+          _G.SevenUpCustomSkinDescriptions = _G.SevenUpCustomSkinDescriptions or setmetatable({}, {__mode = "k"})
+          local CustomSkinDescriptions = _G.SevenUpCustomSkinDescriptions
+
+          _G._SevenUpCustomSkinVariants = CUSTOM_SKIN_VARIANTS
+          _G._SevenUpCustomSkinHatId    = CUSTOM_SKIN_VARIANTS[1].hatId
+          _G._SevenUpCustomSkinShirtId  = CUSTOM_SKIN_VARIANTS[1].shirtId
+          _G._SevenUpCustomSkinPantsId  = CUSTOM_SKIN_VARIANTS[1].pantsId
+          _G._SevenUpCustomSkinHeadId   = CUSTOM_SKIN_VARIANTS[1].headId
+          _G._SevenUpCustomSkinBodyColor = CUSTOM_SKIN_VARIANTS[1].bodyColor
+
+          local function syncCustomSkinVariant(variantIndex)
+            variantIndex = tonumber(variantIndex) == 2 and 2 or 1
+            _G._SevenUpCustomSkinVariant = variantIndex
+            local variant = CUSTOM_SKIN_VARIANTS[variantIndex]
+            _G._SevenUpCustomSkinShirtId   = variant.shirtId
+            _G._SevenUpCustomSkinPantsId   = variant.pantsId
+            _G._SevenUpCustomSkinHatId     = variant.hatId
+            _G._SevenUpCustomSkinHeadId    = variant.headId
+            _G._SevenUpCustomSkinBodyColor = variant.bodyColor
+            CustomSkinAssets = CustomSkinAssetCache[variantIndex]
+            return variant
+          end
+          syncCustomSkinVariant(_G._SevenUpCustomSkinVariant)
+
+          local CUSTOM_SKIN_ACCESSORY_PROPERTIES = {
+            "HatAccessory","HairAccessory","FaceAccessory","NeckAccessory",
+            "ShouldersAccessory","FrontAccessory","BackAccessory","WaistAccessory",
+          }
+
+          local function getCustomSkinAccessoryProperty()
+            local property = "HatAccessory"
+            pcall(function()
+              local info = MarketplaceService2:GetProductInfo(tonumber(_G._SevenUpCustomSkinHatId))
+              local propertyByType = {
+                [8]="HatAccessory",[41]="HairAccessory",[42]="FaceAccessory",
+                [43]="NeckAccessory",[44]="ShouldersAccessory",[45]="FrontAccessory",
+                [46]="BackAccessory",[47]="WaistAccessory",
+              }
+              property = propertyByType[tonumber(info.AssetTypeId)] or property
+            end)
+            return property
+          end
+
+          local function appendCustomSkinAccessory(description)
+            local property = getCustomSkinAccessoryProperty()
+            local hatId = _G._SevenUpCustomSkinHatId
+            local ok = pcall(function()
+              local current = tostring(description[property] or "")
+              local found = false
+              for id in current:gmatch("[^,]+") do
+                if id:gsub("%s+","") == hatId then found = true; break end
               end
-
-              local v80 = ipairs
-              local tbl43 = tbl38[v78] or {}
-
-              for _, v81 in v80(tbl43) do
-                local tbl44 = tbl39[v81]
-
-                if not tbl44 then
-                  tbl44 = {}
-
-                  local ok, result = pcall(function()
-                    return game:GetService("AssetService"):GetBundleDetailsAsync(v81)
-                  end)
-
-                  if ok and result and type(result.Items) == "table" then
-                    for _, item in ipairs(result.Items) do
-                      if item.Type == "Asset" and tonumber(item.Id) then
-                        tbl44[#tbl44 + 1] = tonumber(item.Id)
-                      end
-                    end
-                  end
-
-                  tbl39[v81] = tbl44
-                end
-
-                for _, v82 in ipairs(tbl44) do
-                  tbl41[#tbl41 + 1] = v82
-                end
-              end
-
-              return tbl41
-            end
-
-            local function fn50()
-              if _G._SevenUpUnifiedSaveActive and type(_G._SevenUpRequestSave) == "function" then
-                _G._SevenUpRequestSave()
-                return
-              end
-
-              if type(writefile) ~= "function" then
-                return
-              end
-              pcall(writefile, str10, HttpService2:JSONEncode({ version = 2, enabled = flag28, preset = str11 }))
-            end
-
-            local function fn51()
-              if type(readfile) ~= "function" or type(isfile) ~= "function" then
-                return
-              end
-
-              local ok, result = pcall(function()
-                if not isfile(str10) then
-                  return nil
-                end
-                return HttpService2:JSONDecode(readfile(str10))
-              end)
-
-              if ok and type(result) == "table" and result.version == 2 then
-                flag28 = result.enabled == true
-
-                if tbl37[result.preset] then
-                  str11 = result.preset
-                end
-              end
-            end
-
-            local function fn52(arg)
-              tbl40 = {}
-
-              for _, child in ipairs(arg:GetChildren()) do
-                if child:IsA("Accessory") or child:IsA("Shirt") or child:IsA("Pants") or child:IsA("ShirtGraphic") then
-                  local ok, result = pcall(function()
-                    return child:Clone()
-                  end)
-
-                  if ok and result then
-                    tbl40[#tbl40 + 1] = result
-                  end
-                end
-              end
-            end
-
-            local function fn53(arg)
-              for _, child in ipairs(arg:GetChildren()) do
-                if child:GetAttribute("SevenUpSkin") or child:GetAttribute("SevenUpVlonESkin") then
-                  child:Destroy()
-                end
-              end
-            end
-
-            local function fn54(parent, arg, arg2)
-              arg2:SetAttribute("SevenUpSkin", true)
-
-              pcall(function()
-                arg:AddAccessory(arg2)
-              end)
-
-              if arg2.Parent ~= parent then
-                arg2.Parent = parent
-              end
-
-              local handle = arg2:FindFirstChild("Handle")
-              if not handle or not handle:IsA("BasePart") or handle:FindFirstChild("AccessoryWeld") then
-                return true
-              end
-              local attachment = handle:FindFirstChildWhichIsA("Attachment")
-              if not attachment then
-                return true
-              end
-              local v78 = nil
-
-              for _, descendant in ipairs(parent:GetDescendants()) do
-                if descendant:IsA("Attachment") and descendant.Name == attachment.Name and not descendant:IsDescendantOf(arg2) then
-                  v78 = descendant
-                  break
-                else
-                  v78 = nil
-                end
-              end
-
-              local parent2 = v78 and v78.Parent
-
-              if parent2 and parent2:IsA("BasePart") then
-                handle.Anchored = false
-                handle.CanCollide = false
-                handle.CanTouch = false
-                handle.CanQuery = false
-                handle.Massless = true
-                handle.CFrame = parent2.CFrame * v78.CFrame * attachment.CFrame:Inverse()
-                local weldConstraint = Instance.new("WeldConstraint")
-                weldConstraint.Name = "SevenUpAccessoryWeld"
-                weldConstraint.Part0 = parent2
-                weldConstraint.Part1 = handle
-                weldConstraint.Parent = handle
-              end
-
-              return true
-            end
-
-            local function fn55(parent, arg, arg2)
-              for _, child in ipairs(parent:GetChildren()) do
-                if child:IsA("Accessory") then
-                  local flag30 = false
-
-                  pcall(function()
-                    flag30 = tonumber(child.SourceAssetId) == tonumber(arg2)
-                  end)
-
-                  if flag30 then
-                    return true
-                  end
-                end
-              end
-
-              local ok, result = pcall(function()
-                return game:GetObjects("rbxassetid://" .. tostring(arg2))
-              end)
-
-              if not ok or type(result) ~= "table" or #result == 0 then
-                local v78 = nil
-                if not (pcall(function()
-                  v78 = game:GetService("InsertService"):LoadAsset(arg2)
-                end) and v78) then
-                  return false
-                end
-                result = { v78 }
-              end
-
-              local flag30 = false
-
-              for _, v78 in ipairs(result) do
-                local tbl41 = {}
-
-                if v78:IsA("Accessory") or v78:IsA("Shirt") or v78:IsA("Pants") or v78:IsA("ShirtGraphic") then
-                  tbl41[#tbl41 + 1] = v78
-                else
-                  for _, descendant in ipairs(v78:GetDescendants()) do
-                    if descendant:IsA("Accessory") or descendant:IsA("Shirt") or descendant:IsA("Pants") or descendant:IsA("ShirtGraphic") then
-                      tbl41[#tbl41 + 1] = descendant
-                    end
-                  end
-                end
-
-                for _, v79 in ipairs(tbl41) do
-                  local clone = v79:Clone()
-                  clone:SetAttribute("SevenUpSkin", true)
-
-                  if clone:IsA("Accessory") then
-                    fn54(parent, arg, clone)
-                  else
-                    for _, child in ipairs(parent:GetChildren()) do
-                      if child.ClassName == clone.ClassName then
-                        child:Destroy()
-                      end
-                    end
-
-                    clone.Parent = parent
-                  end
-
-                  flag30 = true
-                end
-
-                pcall(function()
-                  v78:Destroy()
-                end)
-              end
-
-              return flag30
-            end
-
-            local function fn56(arg)
-              local humanoidDescription = Instance.new("HumanoidDescription")
-              local v78 = nil
-
-              if not pcall(function()
-                v78 = Players:CreateHumanoidModelFromDescriptionAsync(humanoidDescription, Enum.HumanoidRigType.R15)
-              end) or not v78 then
-                pcall(function()
-                  v78 = Players:CreateHumanoidModelFromDescription(humanoidDescription, Enum.HumanoidRigType.R15)
-                end)
-              end
-
-              humanoidDescription:Destroy()
-              local humanoid = v78 and v78:FindFirstChildOfClass("Humanoid")
-
-              if v78 and humanoid then
-                for _, v79 in ipairs(fn49(arg)) do
-                  pcall(fn55, v78, humanoid, v79)
-                end
-              end
-
-              return v78
-            end
-
-            local function fn57(arg, transparency)
-              arg = arg and arg:FindFirstChild("Head")
-              if not arg then
-                return
-              end
-              transparency = transparency and 1 or 0
-              arg.Transparency = transparency
-              arg.LocalTransparencyModifier = transparency
-
-              for _, child in ipairs(arg:GetChildren()) do
-                if child:IsA("Decal") or child:IsA("Texture") or child:IsA("BasePart") then
-                  child.Transparency = transparency
-
-                  if child:IsA("BasePart") then
-                    child.LocalTransparencyModifier = transparency
-                  end
-                end
-              end
-            end
-
-            local function fn58(arg)
-              if not arg then
-                return
-              end
-              local sevenupKorbloxRightLeg = arg:FindFirstChild("SevenUpKorblox_RightLeg")
-
-              if sevenupKorbloxRightLeg then
-                sevenupKorbloxRightLeg:Destroy()
-              end
-
-              for _, v78 in ipairs({ "RightUpperLeg", "RightLowerLeg", "RightFoot" }) do
-                local v79 = arg:FindFirstChild(v78)
-
-                if v79 and v79:IsA("BasePart") then
-                  v79.Transparency = 0
-                  v79.LocalTransparencyModifier = 0
-                end
-              end
-            end
-
-            local function fn59(parent)
-              if not parent then
-                return false
-              end
-              fn58(parent)
-              local rightUpperLeg = parent:FindFirstChild("RightUpperLeg")
-              if not rightUpperLeg then
-                return false
-              end
-
-              local ok, result = pcall(function()
-                return game:GetObjects("rbxassetid://139607718")
-              end)
-
-              if not ok or not result or not result[1] then
-                return false
-              end
-              local v78 = result[1]
-              v78.Name = "SevenUpKorblox_RightLeg"
-              v78:SetAttribute("SevenUpSkin", true)
-              local isBasePart = v78:IsA("BasePart") and v78 or v78:FindFirstChildWhichIsA("BasePart", true)
-              if not isBasePart then
-                v78:Destroy()
-                return false
-              end
-
-              for _, v79 in ipairs({ "RightUpperLeg", "RightLowerLeg", "RightFoot" }) do
-                local v80 = parent:FindFirstChild(v79)
-
-                if v80 and v80:IsA("BasePart") then
-                  v80.Transparency = 1
-                  v80.LocalTransparencyModifier = 1
-                end
-              end
-
-              isBasePart.Anchored = false
-              isBasePart.CanCollide = false
-              isBasePart.CanTouch = false
-              isBasePart.CanQuery = false
-              isBasePart.Massless = true
-              isBasePart.CFrame = rightUpperLeg.CFrame
-              local weldConstraint = Instance.new("WeldConstraint")
-              weldConstraint.Name = "SevenUpKorbloxWeld"
-              weldConstraint.Part0 = rightUpperLeg
-              weldConstraint.Part1 = isBasePart
-              weldConstraint.Parent = isBasePart
-              v78.Parent = parent
-              return true
-            end
-
-            local function fn60(arg)
-              local v78 = fn56(arg)
-              local humanoid = v78 and v78:FindFirstChildOfClass("Humanoid")
-              if not v78 or not humanoid then
-                return v78
-              end
-              fn57(v78, true)
-              pcall(fn59, v78)
-              return v78
-            end
-
-            local function fn61()
-              if flag29 or not flag28 then
-                return
-              end
-              local character = localPlayer.Character
-              local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-              if not character or not humanoid then
-                return
-              end
-              flag29 = true
-              fn53(character)
-
-              if not tbl40 then
-                fn52(character)
-              end
-
-              for _, child in ipairs(character:GetChildren()) do
-                if child:IsA("Accessory") or child:IsA("Shirt") or child:IsA("Pants") or child:IsA("ShirtGraphic") then
-                  child.Parent = nil
-                end
-              end
-
-              local flag30 = false
-
-              for _, v78 in ipairs(fn49()) do
-                if not fn55(character, humanoid, v78) then
-                  flag30 = true
-                end
-              end
-
-              if flag30 then
-                local v78 = fn56()
-
-                if v78 then
-                  for _, child in ipairs(v78:GetChildren()) do
-                    if child:IsA("Accessory") then
-                      if not character:FindFirstChild(child.Name) then
-                        fn54(character, humanoid, child:Clone())
-                      end
-                    end
-                  end
-
-                  v78:Destroy()
-                end
-              end
-
-              fn57(character, true)
-              fn59(character)
-              flag29 = false
-            end
-
-            local function fn62()
-              local character = localPlayer.Character
-              if not character then
-                return
-              end
-              fn53(character)
-              fn58(character)
-              fn57(character, false)
-
-              if tbl40 then
-                for _, v78 in ipairs(tbl40) do
-                  if v78 and v78.Parent == nil then
-                    v78:Clone().Parent = character
-                  end
-                end
-              end
-
-              tbl40 = nil
-            end
-
-            fn51()
-
-            -- Avatar skin presets: apply, preview, and restore.
-            _G._SevenUpSkin = {
-              Presets = { "SEVENUP", "RED", "BLUE", "GALAXY" },
-              IsEnabled = function()
-                return flag28
-              end,
-              GetPreset = function()
-                return str11
-              end,
-              SetState = function(arg, arg2, arg3)
-                local v78 = string.upper(tostring(arg2 or str11))
-
-                if tbl37[v78] then
-                  str11 = v78
-                end
-
-                flag28 = arg == true
-
-                if flag28 then
-                  fn61()
-
-                  task.delay(0.8, function()
-                    if flag28 then
-                      fn61()
-                    end
-                  end)
-                else
-                  fn62()
-                end
-
-                if not arg3 then
-                  fn50()
-                end
-              end,
-              SetEnabled = function(arg)
-                flag28 = arg == true
-
-                if flag28 then
-                  fn61()
-
-                  task.delay(0.8, function()
-                    if flag28 then
-                      fn61()
-                    end
-                  end)
-                else
-                  fn62()
-                end
-
-                fn50()
-              end,
-              SetPreset = function(arg)
-                local v78 = string.upper(tostring(arg or ""))
-                if not tbl37[v78] then
-                  return
-                end
-                str11 = v78
-
-                if flag28 then
-                  fn61()
-                end
-
-                fn50()
-              end,
-              Apply = fn61,
-              CreatePreviewRig = fn60,
-            }
-
-            localPlayer.CharacterAdded:Connect(function()
-              tbl40 = nil
-
-              if flag28 then
-                task.delay(0.35, fn61)
-                task.delay(1.15, fn61)
+              if not found then
+                description[property] = current == "" and hatId or (current .. "," .. hatId)
               end
             end)
-
-            if flag28 and localPlayer.Character then
-              task.defer(fn61)
+            if not ok then
+              local current = tostring(description.HatAccessory or "")
+              if not current:find(hatId,1,true) then
+                description.HatAccessory = current == "" and hatId or (current .. "," .. hatId)
+              end
             end
           end
 
-          fn48()
+          local function applyCustomSkinGreen(char, enabled)
+            if not char then return end
+            local green = _G._SevenUpCustomSkinBodyColor
+            local bodyColors = char:FindFirstChildOfClass("BodyColors")
+            local colorProperties = {"HeadColor3","LeftArmColor3","LeftLegColor3","RightArmColor3","RightLegColor3","TorsoColor3"}
+            if bodyColors then
+              for _, property in ipairs(colorProperties) do
+                local attribute = "SevenUpOriginal" .. property
+                if enabled then
+                  if bodyColors:GetAttribute(attribute) == nil then
+                    bodyColors:SetAttribute(attribute, bodyColors[property])
+                  end
+                  bodyColors[property] = green
+                else
+                  local original = bodyColors:GetAttribute(attribute)
+                  if typeof(original) == "Color3" then bodyColors[property] = original end
+                  bodyColors:SetAttribute(attribute, nil)
+                end
+              end
+            end
+            for _, part in ipairs(char:GetChildren()) do
+              if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                local attribute = "SevenUpOriginalBodyColor"
+                if enabled then
+                  if part:GetAttribute(attribute) == nil then part:SetAttribute(attribute, part.Color) end
+                  part.Color = green
+                else
+                  local original = part:GetAttribute(attribute)
+                  if typeof(original) == "Color3" then part.Color = original end
+                  part:SetAttribute(attribute, nil)
+                end
+              end
+            end
+          end
+
+          local function absorbCustomSkinAssets(root)
+            if not root then return end
+            local shirt = root:IsA("Shirt") and root or root:FindFirstChildWhichIsA("Shirt", true)
+            local pants = root:IsA("Pants") and root or root:FindFirstChildWhichIsA("Pants", true)
+            local hat = root:IsA("Accessory") and root or root:FindFirstChildWhichIsA("Accessory", true)
+            if shirt and shirt.ShirtTemplate ~= "" then CustomSkinAssets.shirtTemplate = shirt.ShirtTemplate end
+            if pants and pants.PantsTemplate ~= "" then CustomSkinAssets.pantsTemplate = pants.PantsTemplate end
+            if hat and not CustomSkinAssets.hatTemplate then
+              CustomSkinAssets.hatTemplate = hat:Clone()
+              CustomSkinAssets.hatTemplate.Parent = nil
+            end
+          end
+
+          local function loadCustomSkinAssetObject(assetId)
+            local objects = nil
+            pcall(function() objects = game:GetObjects("rbxassetid://" .. tostring(assetId)) end)
+            if type(objects) == "table" then
+              for _, object in ipairs(objects) do absorbCustomSkinAssets(object) end
+              for _, object in ipairs(objects) do pcall(function() object:Destroy() end) end
+            end
+            if not CustomSkinAssets.hatTemplate and tostring(assetId) == _G._SevenUpCustomSkinHatId then
+              local container = nil
+              pcall(function() container = InsertService2:LoadAsset(tonumber(assetId)) end)
+              if container then absorbCustomSkinAssets(container); container:Destroy() end
+            end
+          end
+
+          local function resolveCustomSkinAssets()
+            if CustomSkinAssets.shirtTemplate and CustomSkinAssets.pantsTemplate and CustomSkinAssets.hatTemplate then
+              return CustomSkinAssets
+            end
+            local now = tick()
+            if now - (CustomSkinAssets.lastAttempt or 0) < 2 then return CustomSkinAssets end
+            CustomSkinAssets.lastAttempt = now
+            local previewModel = nil
+            pcall(function()
+              local description = Instance.new("HumanoidDescription")
+              description.Shirt = _G._SevenUpCustomSkinShirtId
+              description.Pants = _G._SevenUpCustomSkinPantsId
+              description.Head = _G._SevenUpCustomSkinHeadId
+              appendCustomSkinAccessory(description)
+              previewModel = Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
+              description:Destroy()
+            end)
+            if previewModel then absorbCustomSkinAssets(previewModel); previewModel:Destroy() end
+            if not CustomSkinAssets.shirtTemplate then loadCustomSkinAssetObject(_G._SevenUpCustomSkinShirtId) end
+            if not CustomSkinAssets.pantsTemplate then loadCustomSkinAssetObject(_G._SevenUpCustomSkinPantsId) end
+            if not CustomSkinAssets.hatTemplate then loadCustomSkinAssetObject(_G._SevenUpCustomSkinHatId) end
+            CustomSkinAssets.shirtTemplate = CustomSkinAssets.shirtTemplate or ("rbxassetid://" .. tostring(_G._SevenUpCustomSkinShirtId))
+            CustomSkinAssets.pantsTemplate = CustomSkinAssets.pantsTemplate or ("rbxassetid://" .. tostring(_G._SevenUpCustomSkinPantsId))
+            return CustomSkinAssets
+          end
+
+          local function removeTaggedCustomSkinItems(char)
+            if not char then return end
+            for _, child in ipairs(char:GetChildren()) do
+              if child:GetAttribute(CUSTOM_SKIN_TAG) == true then child:Destroy() end
+            end
+          end
+
+          local function snapshotCustomSkinClothing(char)
+            if CustomSkinSnapshots[char] then return CustomSkinSnapshots[char] end
+            local snapshot = {shirts = {}, pants = {}, accessoryNames = {}}
+            for _, child in ipairs(char:GetChildren()) do
+              if child:IsA("Accessory") and child:GetAttribute(CUSTOM_SKIN_TAG) ~= true then
+                local name = tostring(child.Name)
+                snapshot.accessoryNames[name] = (snapshot.accessoryNames[name] or 0) + 1
+              end
+            end
+            if char:GetAttribute(CUSTOM_SKIN_SNAPSHOT_ATTR) == true then
+              local oldShirt = char:GetAttribute(CUSTOM_SKIN_SHIRT_ATTR)
+              local oldPants = char:GetAttribute(CUSTOM_SKIN_PANTS_ATTR)
+              if type(oldShirt) == "string" and oldShirt ~= "" then
+                local shirt = Instance.new("Shirt"); shirt.ShirtTemplate = oldShirt
+                table.insert(snapshot.shirts, shirt)
+              end
+              if type(oldPants) == "string" and oldPants ~= "" then
+                local pants = Instance.new("Pants"); pants.PantsTemplate = oldPants
+                table.insert(snapshot.pants, pants)
+              end
+            else
+              local savedShirt, savedPants = "", ""
+              for _, child in ipairs(char:GetChildren()) do
+                if child:IsA("Shirt") and child:GetAttribute(CUSTOM_SKIN_TAG) ~= true then
+                  table.insert(snapshot.shirts, child:Clone())
+                  if savedShirt == "" then savedShirt = child.ShirtTemplate end
+                elseif child:IsA("Pants") and child:GetAttribute(CUSTOM_SKIN_TAG) ~= true then
+                  table.insert(snapshot.pants, child:Clone())
+                  if savedPants == "" then savedPants = child.PantsTemplate end
+                end
+              end
+              char:SetAttribute(CUSTOM_SKIN_SNAPSHOT_ATTR, true)
+              char:SetAttribute(CUSTOM_SKIN_SHIRT_ATTR, savedShirt)
+              char:SetAttribute(CUSTOM_SKIN_PANTS_ATTR, savedPants)
+            end
+            CustomSkinSnapshots[char] = snapshot
+            return snapshot
+          end
+
+          local function clearCharacterClothing(char)
+            for _, child in ipairs(char:GetChildren()) do
+              if child:IsA("Shirt") or child:IsA("Pants") then child:Destroy() end
+            end
+          end
+
+          local function attachCustomSkinHat(char, assets)
+            local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+            if not char or not humanoid then return end
+            for _, child in ipairs(char:GetChildren()) do
+              if child:IsA("Accessory") then
+                if child:GetAttribute(CUSTOM_SKIN_TAG) == true then return end
+                local sourceId = nil
+                pcall(function() sourceId = child.SourceAssetId end)
+                local matchingName = assets.hatTemplate and child.Name == assets.hatTemplate.Name
+                if tostring(sourceId or "") == _G._SevenUpCustomSkinHatId or matchingName then
+                  child:SetAttribute(CUSTOM_SKIN_TAG, true); return
+                end
+              end
+            end
+            if not assets.hatTemplate then return end
+            local hat = assets.hatTemplate:Clone()
+            hat.Name = "SevenUpCustomSkinHat"
+            hat:SetAttribute(CUSTOM_SKIN_TAG, true)
+            for _, child in ipairs(hat:GetDescendants()) do
+              if child:IsA("Script") or child:IsA("LocalScript") then child:Destroy() end
+              if child:IsA("BasePart") then
+                child.Anchored = false; child.CanCollide = false; child.Massless = true
+              end
+            end
+            local added = pcall(function() humanoid:AddAccessory(hat) end)
+            if not added or not hat.Parent then hat.Parent = char end
+            local handle = hat:FindFirstChild("Handle") or hat:FindFirstChildWhichIsA("BasePart", true)
+            if handle and not handle:FindFirstChild("AccessoryWeld") then
+              local handleAttachment = handle:FindFirstChildWhichIsA("Attachment")
+              local bodyAttachment = nil
+              if handleAttachment then
+                for _, item in ipairs(char:GetDescendants()) do
+                  if item:IsA("Attachment") and item.Name == handleAttachment.Name and not item:IsDescendantOf(hat) then
+                    bodyAttachment = item; break
+                  end
+                end
+              end
+              if handleAttachment and bodyAttachment and bodyAttachment.Parent:IsA("BasePart") then
+                handle.CFrame = bodyAttachment.WorldCFrame * handleAttachment.CFrame:Inverse()
+                local weld = Instance.new("WeldConstraint")
+                weld.Name = "SevenUpSkinWeld"; weld.Part0 = handle; weld.Part1 = bodyAttachment.Parent; weld.Parent = handle
+              end
+            end
+          end
+
+          local function applyCustomSkinDescription(char, assets)
+            syncCustomSkinVariant(_G._SevenUpCustomSkinVariant)
+            local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+            if not humanoid then return false end
+            if not CustomSkinDescriptions[char] then
+              local original = nil
+              pcall(function() original = humanoid:GetAppliedDescription():Clone() end)
+              if original then CustomSkinDescriptions[char] = original end
+            end
+            local original = CustomSkinDescriptions[char]
+            if not original then return false end
+            local description = original:Clone()
+            description.Shirt = _G._SevenUpCustomSkinShirtId
+            description.Pants = _G._SevenUpCustomSkinPantsId
+            description.Head  = _G._SevenUpCustomSkinHeadId
+            description.HeadColor      = _G._SevenUpCustomSkinBodyColor
+            description.LeftArmColor   = _G._SevenUpCustomSkinBodyColor
+            description.LeftLegColor   = _G._SevenUpCustomSkinBodyColor
+            description.RightArmColor  = _G._SevenUpCustomSkinBodyColor
+            description.RightLegColor  = _G._SevenUpCustomSkinBodyColor
+            description.TorsoColor     = _G._SevenUpCustomSkinBodyColor
+            appendCustomSkinAccessory(description)
+            local applied = pcall(function() humanoid:ApplyDescription(description) end)
+            description:Destroy()
+            if not applied then return false end
+            local foundHat = false
+            for _, child in ipairs(char:GetChildren()) do
+              if child:IsA("Shirt") or child:IsA("Pants") then
+                child:SetAttribute(CUSTOM_SKIN_TAG, true)
+              elseif child:IsA("Accessory") then
+                local sourceId = nil
+                pcall(function() sourceId = child.SourceAssetId end)
+                local matchingName = assets.hatTemplate and child.Name == assets.hatTemplate.Name
+                if tostring(sourceId or "") == _G._SevenUpCustomSkinHatId or matchingName then
+                  child:SetAttribute(CUSTOM_SKIN_TAG, true); foundHat = true
+                end
+              end
+            end
+            if not foundHat then attachCustomSkinHat(char, assets) end
+            return true
+          end
+
+          local function restoreCustomSkinDescription(char)
+            local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+            local original = char and CustomSkinDescriptions[char]
+            if not humanoid or not original then return false end
+            local restored = pcall(function() humanoid:ApplyDescription(original) end)
+            if restored then CustomSkinDescriptions[char] = nil end
+            return restored
+          end
+
+          local function applyCustomSkinToChar(char)
+            if not char then return end
+            syncCustomSkinVariant(_G._SevenUpCustomSkinVariant)
+            local assets = resolveCustomSkinAssets()
+            snapshotCustomSkinClothing(char)
+            if not applyCustomSkinDescription(char, assets) then
+              clearCharacterClothing(char)
+              local shirt = Instance.new("Shirt")
+              shirt.Name = "SevenUpCustomSkinShirt"
+              shirt.ShirtTemplate = assets.shirtTemplate
+              shirt:SetAttribute(CUSTOM_SKIN_TAG, true)
+              shirt.Parent = char
+              local pants = Instance.new("Pants")
+              pants.Name = "SevenUpCustomSkinPants"
+              pants.PantsTemplate = assets.pantsTemplate
+              pants:SetAttribute(CUSTOM_SKIN_TAG, true)
+              pants.Parent = char
+              attachCustomSkinHat(char, assets)
+            end
+            applyCustomSkinGreen(char, true)
+          end
+
+          local function restoreCustomSkinFromChar(char)
+            if not char then return end
+            local snapshot = CustomSkinSnapshots[char]
+            local descriptionRestored = restoreCustomSkinDescription(char)
+            removeTaggedCustomSkinItems(char)
+            if snapshot and not descriptionRestored then
+              clearCharacterClothing(char)
+              for _, shirt in ipairs(snapshot.shirts) do shirt:Clone().Parent = char end
+              for _, pants in ipairs(snapshot.pants) do pants:Clone().Parent = char end
+            end
+            CustomSkinSnapshots[char] = nil
+            applyCustomSkinGreen(char, false)
+            char:SetAttribute(CUSTOM_SKIN_SNAPSHOT_ATTR, nil)
+            char:SetAttribute(CUSTOM_SKIN_SHIRT_ATTR, nil)
+            char:SetAttribute(CUSTOM_SKIN_PANTS_ATTR, nil)
+          end
+
+          local function applyHeadlessToChar(char, enabled)
+            if not char then return end
+            local head = char:FindFirstChild("Head")
+            if not head then return end
+            if enabled then
+              head.Transparency = 1
+              head.CanCollide = false
+              local face = head:FindFirstChild("face")
+              if face then face:Destroy() end
+              if not head:FindFirstChild("HeadlessMesh") then
+                local m = Instance.new("SpecialMesh")
+                m.MeshType = Enum.MeshType.FileMesh
+                m.MeshId = HEADLESS_MESH_ID
+                m.Scale = Vector3.new(0.001, 0.001, 0.001)
+                m.Name = "HeadlessMesh"
+                m.Parent = head
+              end
+              if not head:GetAttribute("HeadlessHooked") then
+                head:SetAttribute("HeadlessHooked", true)
+                head:GetPropertyChangedSignal("Transparency"):Connect(function()
+                  if head:GetAttribute("HeadlessHooked") and head.Transparency ~= 1 then
+                    head.Transparency = 1
+                  end
+                end)
+                head.ChildAdded:Connect(function(c)
+                  if head:GetAttribute("HeadlessHooked") and c.Name == "face" and c:IsA("Decal") then c:Destroy() end
+                end)
+              end
+            else
+              head.Transparency = 0
+              head.CanCollide = true
+              head:SetAttribute("HeadlessHooked", nil)
+              for _, c in ipairs(head:GetChildren()) do
+                if c:IsA("SpecialMesh") and c.Name == "HeadlessMesh" then c:Destroy() end
+              end
+              if not head:FindFirstChild("face") then
+                local f = Instance.new("Decal")
+                f.Name = "face"
+                f.Texture = "rbxassetid://2002749760"
+                f.Parent = head
+              end
+            end
+          end
+
+          local function applyKorbloxToChar(char, enabled)
+            if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
+            if enabled then
+              if hum.RigType == Enum.HumanoidRigType.R6 then
+                local rightLeg = char:FindFirstChild("Right Leg")
+                if rightLeg then
+                  for _, c in ipairs(rightLeg:GetChildren()) do
+                    if c:IsA("CharacterMesh") then c:Destroy() end
+                  end
+                  if not rightLeg:FindFirstChild("KorbloxMesh") then
+                    for _, c in ipairs(rightLeg:GetChildren()) do
+                      if c:IsA("SpecialMesh") then c:Destroy() end
+                    end
+                    local m = Instance.new("SpecialMesh")
+                    m.MeshType = Enum.MeshType.FileMesh
+                    m.MeshId = KORBLOX_MESH_ID
+                    m.TextureId = KORBLOX_TEXTURE_ID
+                    m.Scale = Vector3.new(1,1,1)
+                    m.Name = "KorbloxMesh"
+                    m.Parent = rightLeg
+                  end
+                  rightLeg.Color = DARK_GREY_COLOR
+                  if not rightLeg:GetAttribute("KorbloxHooked") then
+                    rightLeg:SetAttribute("KorbloxHooked", true)
+                    rightLeg:GetPropertyChangedSignal("Color"):Connect(function()
+                      if rightLeg:GetAttribute("KorbloxHooked") and rightLeg.Color ~= DARK_GREY_COLOR then
+                        rightLeg.Color = DARK_GREY_COLOR
+                      end
+                    end)
+                  end
+                end
+              elseif hum.RigType == Enum.HumanoidRigType.R15 then
+                local rup = char:FindFirstChild("RightUpperLeg")
+                if rup then
+                  rup.Transparency = 1
+                  local rll = char:FindFirstChild("RightLowerLeg")
+                  local rf  = char:FindFirstChild("RightFoot")
+                  if rll then rll.Transparency = 1 end
+                  if rf  then rf.Transparency  = 1 end
+                  if not char:FindFirstChild("KorbloxLeg") then
+                    local leg = Instance.new("Part")
+                    leg.Name = "KorbloxLeg"
+                    leg.Size = Vector3.new(1,2,1)
+                    leg.Anchored = false
+                    leg.CanCollide = false
+                    leg.Color = DARK_GREY_COLOR
+                    leg.Parent = char
+                    local m = Instance.new("SpecialMesh")
+                    m.MeshType = Enum.MeshType.FileMesh
+                    m.MeshId = KORBLOX_MESH_ID
+                    m.TextureId = KORBLOX_TEXTURE_ID
+                    m.Scale = Vector3.new(1,1,1)
+                    m.Name = "KorbloxMesh"
+                    m.Parent = leg
+                    local w = Instance.new("Weld")
+                    w.Part0 = rup
+                    w.Part1 = leg
+                    w.C0 = CFrame.new(0, -0.8, 0)
+                    w.Name = "KorbloxWeld"
+                    w.Parent = leg
+                  end
+                end
+              end
+            else
+              if hum.RigType == Enum.HumanoidRigType.R6 then
+                local rightLeg = char:FindFirstChild("Right Leg")
+                if rightLeg then
+                  rightLeg:SetAttribute("KorbloxHooked", nil)
+                  for _, c in ipairs(rightLeg:GetChildren()) do
+                    if c:IsA("SpecialMesh") and c.Name == "KorbloxMesh" then c:Destroy() end
+                  end
+                  rightLeg.Color = Color3.fromRGB(255,255,255)
+                end
+              elseif hum.RigType == Enum.HumanoidRigType.R15 then
+                local rup = char:FindFirstChild("RightUpperLeg")
+                if rup then
+                  rup.Transparency = 0
+                  local rll = char:FindFirstChild("RightLowerLeg")
+                  local rf  = char:FindFirstChild("RightFoot")
+                  if rll then rll.Transparency = 0 end
+                  if rf  then rf.Transparency  = 0 end
+                  local leg = char:FindFirstChild("KorbloxLeg")
+                  if leg then leg:Destroy() end
+                end
+              end
+            end
+          end
+
+          local function applyOutfit1ToChar(char)
+            if not char then return end
+            local head = char:FindFirstChild("Head")
+            if head then
+              for _, c in ipairs(head:GetChildren()) do
+                if c:IsA("SpecialMesh") and c.Name ~= "HeadlessMesh" then c:Destroy() end
+              end
+              local m = Instance.new("SpecialMesh")
+              m.MeshType = Enum.MeshType.FileMesh
+              m.MeshId = OUTFIT1_HEAD_MESH
+              m.Scale = Vector3.new(1,1,1)
+              m.Name = "OutfitHeadMesh"
+              m.Parent = head
+              head.Transparency = 0
+              head.CanCollide = true
+            end
+            local shirt = char:FindFirstChildOfClass("Shirt") or Instance.new("Shirt", char)
+            shirt.ShirtTemplate = "rbxassetid://" .. tostring(OUTFIT1_SHIRT_ID)
+            local pants = char:FindFirstChildOfClass("Pants") or Instance.new("Pants", char)
+            pants.PantsTemplate = "rbxassetid://" .. tostring(OUTFIT1_PANTS_ID)
+            for _, c in ipairs(char:GetChildren()) do
+              if c:IsA("Accessory") then c:Destroy() end
+            end
+            for _, p in ipairs(char:GetDescendants()) do
+              if p:IsA("BasePart") then
+                if p.Name == "Head" or p.Name:find("Torso") or p.Name:find("Arm") then
+                  p.Color = Color3.fromRGB(255,0,0)
+                elseif p.Name:find("Leg") then
+                  p.Color = Color3.fromRGB(0,0,0)
+                end
+              end
+            end
+          end
+
+          local function applyOutfit2ToChar(char)
+            if not char then return end
+            local head = char:FindFirstChild("Head")
+            if head then
+              for _, c in ipairs(head:GetChildren()) do
+                if c:IsA("SpecialMesh") and c.Name ~= "HeadlessMesh" then c:Destroy() end
+              end
+              local m = Instance.new("SpecialMesh")
+              m.MeshType = Enum.MeshType.FileMesh
+              m.MeshId = OUTFIT2_HEAD_MESH
+              m.Scale = Vector3.new(1,1,1)
+              m.Name = "OutfitHeadMesh"
+              m.Parent = head
+              head.Transparency = 0
+              head.CanCollide = true
+            end
+            local shirt = char:FindFirstChildOfClass("Shirt") or Instance.new("Shirt", char)
+            shirt.ShirtTemplate = "rbxassetid://" .. tostring(OUTFIT2_SHIRT_ID)
+            local pants = char:FindFirstChildOfClass("Pants") or Instance.new("Pants", char)
+            pants.PantsTemplate = "rbxassetid://" .. tostring(OUTFIT2_PANTS_ID)
+            for _, c in ipairs(char:GetChildren()) do
+              if c:IsA("Accessory") then c:Destroy() end
+            end
+          end
+
+          local function applyOutfit3ToChar(char)
+            if not char then return end
+            local shirt = char:FindFirstChildOfClass("Shirt") or Instance.new("Shirt", char)
+            shirt.ShirtTemplate = "rbxassetid://" .. tostring(OUTFIT3_SHIRT_ID)
+            local pants = char:FindFirstChildOfClass("Pants") or Instance.new("Pants", char)
+            pants.PantsTemplate = "rbxassetid://" .. tostring(OUTFIT3_PANTS_ID)
+            for _, p in ipairs(char:GetDescendants()) do
+              if p:IsA("BasePart") then p.Color = Color3.fromRGB(10,10,10) end
+            end
+          end
+
+          local function applyActiveOutfitToChar(char)
+            if not char then char = localPlayer.Character end
+            if not char then return end
+            if _G._SevenUpCustomSkinEnabled then
+              applyCustomSkinToChar(char)
+            else
+              restoreCustomSkinFromChar(char)
+              if _G._SevenUpOutfit1Applied then applyOutfit1ToChar(char)
+              elseif _G._SevenUpOutfit2Applied then applyOutfit2ToChar(char)
+              elseif _G._SevenUpOutfit3Applied then applyOutfit3ToChar(char) end
+            end
+            if _G._SevenUpHeadlessEnabled then applyHeadlessToChar(char, true) else applyHeadlessToChar(char, false) end
+            if _G._SevenUpKorbloxEnabled  then applyKorbloxToChar(char, true)  else applyKorbloxToChar(char, false)  end
+          end
+
+          _G._SevenUpSkin = {
+            Presets = { "7UP SKIN", "BART SKIN", "Legacy 1", "Try Hard 1", "Venom Fit" },
+            IsEnabled = function() return _G._SevenUpCustomSkinEnabled == true end,
+            GetPreset = function() return CUSTOM_SKIN_VARIANTS[_G._SevenUpCustomSkinVariant or 1].name end,
+            Apply = applyActiveOutfitToChar,
+            ApplyHeadless = applyHeadlessToChar,
+            ApplyKorblox = applyKorbloxToChar,
+            ApplyOutfit = function(index)
+              _G._SevenUpOutfit1Applied = (index == 1)
+              _G._SevenUpOutfit2Applied = (index == 2)
+              _G._SevenUpOutfit3Applied = (index == 3)
+              applyActiveOutfitToChar(localPlayer.Character)
+            end,
+            ApplyOutfitToChar = function(char, index)
+              if not char then return end
+              if index == 1 then applyOutfit1ToChar(char)
+              elseif index == 2 then applyOutfit2ToChar(char)
+              elseif index == 3 then applyOutfit3ToChar(char) end
+            end,
+            ApplyCustomVariantToChar = function(char, variantIndex)
+              if not char then return end
+              local oldVariant = _G._SevenUpCustomSkinVariant or 1
+              _G._SevenUpCustomSkinVariant = (variantIndex == 2) and 2 or 1
+              syncCustomSkinVariant(_G._SevenUpCustomSkinVariant)
+              applyCustomSkinToChar(char)
+              _G._SevenUpCustomSkinVariant = oldVariant
+              syncCustomSkinVariant(oldVariant)
+            end,
+            SetCustomSkin = function(enabled, variant)
+              _G._SevenUpCustomSkinEnabled = enabled == true
+              if variant == 1 or variant == 2 then
+                _G._SevenUpCustomSkinVariant = variant
+                syncCustomSkinVariant(variant)
+              end
+              applyActiveOutfitToChar(localPlayer.Character)
+            end,
+            SetHeadless = function(on) _G._SevenUpHeadlessEnabled = on == true; applyActiveOutfitToChar(localPlayer.Character) end,
+            SetKorblox  = function(on) _G._SevenUpKorbloxEnabled  = on == true; applyActiveOutfitToChar(localPlayer.Character) end,
+            SetEnabled = function(on)
+              _G._SevenUpCustomSkinEnabled = on == true
+              applyActiveOutfitToChar(localPlayer.Character)
+            end,
+            SetPreset = function(name)
+              if name == "BART SKIN" then
+                _G._SevenUpCustomSkinVariant = 2; syncCustomSkinVariant(2)
+                _G._SevenUpCustomSkinEnabled = true
+              elseif name == "7UP SKIN" then
+                _G._SevenUpCustomSkinVariant = 1; syncCustomSkinVariant(1)
+                _G._SevenUpCustomSkinEnabled = true
+              end
+              applyActiveOutfitToChar(localPlayer.Character)
+            end,
+            SetState = function(enabled, preset, silent)
+              if preset == "BART SKIN" then
+                _G._SevenUpCustomSkinVariant = 2; syncCustomSkinVariant(2)
+              elseif preset == "7UP SKIN" or preset == "SEVENUP" then
+                _G._SevenUpCustomSkinVariant = 1; syncCustomSkinVariant(1)
+              end
+              _G._SevenUpCustomSkinEnabled = enabled == true
+              if not silent then applyActiveOutfitToChar(localPlayer.Character) end
+            end,
+            Refreshers = _G._SevenUpOutfitButtonRefreshers,
+          }
+
+          localPlayer.CharacterAdded:Connect(function()
+            task.wait(0.35)
+            if _G._SevenUpCustomSkinEnabled or _G._SevenUpHeadlessEnabled or _G._SevenUpKorbloxEnabled
+               or _G._SevenUpOutfit1Applied or _G._SevenUpOutfit2Applied or _G._SevenUpOutfit3Applied then
+              pcall(applyActiveOutfitToChar, localPlayer.Character)
+            end
+          end)
+
+          task.spawn(function()
+            while task.wait(1) do
+              if _G._SevenUpCustomSkinEnabled then
+                local char = localPlayer.Character
+                if char then
+                  local customShirts, customPants = 0, 0
+                  for _, child in ipairs(char:GetChildren()) do
+                    if child:IsA("Shirt") and child:GetAttribute(CUSTOM_SKIN_TAG) == true then customShirts = customShirts + 1
+                    elseif child:IsA("Pants") and child:GetAttribute(CUSTOM_SKIN_TAG) == true then customPants = customPants + 1 end
+                  end
+                  if customShirts ~= 1 or customPants ~= 1 then pcall(applyCustomSkinToChar, char) end
+                end
+              end
+            end
+          end)
         end
       end
 
@@ -6975,8 +7128,14 @@ local function _SevenUpMain()
           tbl37.mobileButtonProfiles = _G._SevenUpMobileBtnPositions or {}
 
           tbl37.skin = {
-            enabled = _G._SevenUpSkin and _G._SevenUpSkin.IsEnabled() == true or false,
-            preset = _G._SevenUpSkin and _G._SevenUpSkin.GetPreset() or "SEVENUP",
+            enabled = _G._SevenUpCustomSkinEnabled == true,
+            preset = _G._SevenUpSkin and _G._SevenUpSkin.GetPreset() or "7UP SKIN",
+            variant = _G._SevenUpCustomSkinVariant or 1,
+            headless = _G._SevenUpHeadlessEnabled == true,
+            korblox = _G._SevenUpKorbloxEnabled == true,
+            outfit1 = _G._SevenUpOutfit1Applied == true,
+            outfit2 = _G._SevenUpOutfit2Applied == true,
+            outfit3 = _G._SevenUpOutfit3Applied == true,
           }
 
           tbl37.on = {
@@ -7508,18 +7667,17 @@ local function _SevenUpMain()
             flag29 = sevenupLoadedUnifiedV5
           end
 
-          if flag29 and _G._SevenUpSkin and _G._SevenUpSkin.SetState then
-            pcall(_G._SevenUpSkin.SetState, tbl37.skin.enabled == true, tbl37.skin.preset, true)
-          elseif not sevenupLoadedUnifiedV5 and _G._SevenUpSkin and _G._SevenUpSkin.SetState then
-            pcall(function()
-              if _G._SevenUpSaveFiles.isfile(_G._SevenUpSaveFiles.skin) then
-                local data = HttpService:JSONDecode(_G._SevenUpSaveFiles.read(_G._SevenUpSaveFiles.skin))
-
-                if type(data) == "table" then
-                  _G._SevenUpSkin.SetState(data.enabled == true, data.preset, true)
-                end
-              end
-            end)
+          if type(tbl37.skin) == "table" and _G._SevenUpSkin then
+            local skinData = tbl37.skin
+            if skinData.headless ~= nil then _G._SevenUpHeadlessEnabled = skinData.headless == true end
+            if skinData.korblox  ~= nil then _G._SevenUpKorbloxEnabled  = skinData.korblox  == true end
+            if skinData.outfit1  ~= nil then _G._SevenUpOutfit1Applied  = skinData.outfit1  == true end
+            if skinData.outfit2  ~= nil then _G._SevenUpOutfit2Applied  = skinData.outfit2  == true end
+            if skinData.outfit3  ~= nil then _G._SevenUpOutfit3Applied  = skinData.outfit3  == true end
+            if skinData.enabled ~= nil or skinData.preset then
+              pcall(_G._SevenUpSkin.SetState, skinData.enabled == true, skinData.preset, true)
+            end
+            task.defer(function() pcall(_G._SevenUpSkin.Apply, localPlayer.Character) end)
           end
 
           if type(tbl37.mainPos) == "table" then
@@ -11320,16 +11478,16 @@ local function _SevenUpMain()
         _G._SevenUpAccent = v78.accent
 
         tbl37 = {
-          bg = Color3.fromRGB(8, 8, 16),
-          panel = Color3.fromRGB(0, 0, 0),
-          row = Color3.fromRGB(0, 0, 0),
-          rowHover = Color3.fromRGB(240, 255, 255),
-          key = Color3.fromRGB(24, 8, 16),
-          stroke = Color3.fromRGB(72, 60, 90),
-          text = Color3.fromRGB(255, 255, 255),
-          muted = Color3.fromRGB(190, 187, 202),
-          accent = v78.accent,
-          accentDark = v78.accentDark,
+          bg = Color3.fromRGB(210, 240, 210),      -- Top bar color
+          panel = Color3.fromRGB(190, 230, 190),   -- Main background
+          row = Color3.fromRGB(170, 220, 170),     -- Buttons color
+          rowHover = Color3.fromRGB(200, 240, 200),
+          key = Color3.fromRGB(150, 205, 150),     -- Text box / Value color
+          stroke = Color3.fromRGB(80, 160, 80),    -- Border color
+          text = Color3.fromRGB(20, 50, 20),       -- Dark text (taaki green pe dikhe)
+          muted = Color3.fromRGB(60, 100, 60),     -- Muted text
+          accent = Color3.fromRGB(50, 205, 50),    -- Bright Green accent
+          accentDark = Color3.fromRGB(34, 139, 34),
         }
       end
 
@@ -14928,8 +15086,557 @@ local function _SevenUpMain()
         end
 
         fn75()
+        -- ============================================================
+        -- FULL MUSIC PLAYER EXTRACTED FROM 1ST SCRIPT
+        -- ============================================================
+        local MusicPlayer = { sound = nil, playing = false, volume = 1.2, songIdx = 1, gui = nil, looped = true, scale = 1 }
+        local selectedIntroMusic = 1
+        local INTRO_MUSIC_OPTIONS = {
+            {name="Blue Bands", url="https://files.catbox.moe/mzvrir.mp3", file="K7IntroSong_1.mp3"},
+            {name="Legacy", url="https://files.catbox.moe/siru6c.mp3", file="K7IntroSong_2c.mp3"},
+            {name="paznerknacker.wav", url="https://files.catbox.moe/izcvhm.mp3", file="K7IntroSong_3b.mp3"},
+            {name="Tesla", url="https://files.catbox.moe/n85fch.mp3", file="K7IntroSong_4b.mp3"},
+            {name="King Nasir", url="https://files.catbox.moe/etk99y.mp3", file="K7IntroSong_5b.mp3"},
+            {name="Pure Cocaine", url="https://files.catbox.moe/dvjtjk.mp3", file="K7IntroSong_6.mp3"},
+            {name="nuts", url="https://files.catbox.moe/iyw1cb.mp3", file="K7IntroSong_7.mp3"},
+            {name="Gelato", url="https://files.catbox.moe/zf2z42.mp3", file="K7IntroSong_8.mp3"},
+            {name="FREAKED OUT", url="https://files.catbox.moe/dyt2ja.mp3", file="K7IntroSong_9.mp3"},
+            {name="Scam Likely", url="https://files.catbox.moe/pr85mz.mp3", file="K7IntroSong_10.mp3"},
+            {name="NO INTRO MUSIC", silent=true},
+        }
+        local INTRO_SONG_FILE = "K7IntroSongIdx.txt"
+        local function saveIntroSongIdx()
+            pcall(function() if writefile then writefile(INTRO_SONG_FILE, tostring(selectedIntroMusic or 1)) end end)
+        end
+        pcall(function()
+            if isfile and isfile(INTRO_SONG_FILE) and readfile then
+                local n = tonumber(tostring(readfile(INTRO_SONG_FILE) or ""):match("%d+"))
+                if n and n >= 1 and n <= #INTRO_MUSIC_OPTIONS then selectedIntroMusic = n end
+            end
+        end)
+
+        local introSongCache = {}
+        local introSongDownloading = {}
+        local introPlaybackSound = nil
+        local introPlaybackToken = 0
+
+        local function stopIntroPlayback()
+            introPlaybackToken = introPlaybackToken + 1
+            if introPlaybackSound then
+                pcall(function() introPlaybackSound:Stop() end)
+                pcall(function() introPlaybackSound:Destroy() end)
+                introPlaybackSound = nil
+            end
+        end
+
+        local function cacheIntroSong(option, allowDownload)
+            if not option or not option.url or option.url == "" then return nil end
+            local fileName = option.file or "K7IntroSong.mp3"
+            local function loadExisting()
+                if introSongCache[fileName] then return introSongCache[fileName] end
+                local hasFile = false
+                pcall(function() if isfile then hasFile = isfile(fileName) end end)
+                if hasFile and getcustomasset then
+                    local ok, asset = pcall(function() return getcustomasset(fileName) end)
+                    if ok and asset then introSongCache[fileName] = asset return asset end
+                end
+                return nil
+            end
+            local cached = loadExisting()
+            if cached then return cached end
+            if allowDownload == false then return nil end
+            if introSongDownloading[fileName] then
+                local waitStart = tick()
+                while introSongDownloading[fileName] and tick() - waitStart < 12 do task.wait(0.05) end
+                return loadExisting()
+            end
+            introSongDownloading[fileName] = true
+            local data = nil
+            pcall(function() if game and game.HttpGet then data = game:HttpGet(option.url) end end)
+            if (not data or #data == 0) then
+                pcall(function()
+                    local req = (syn and syn.request) or http_request or request or (getgenv and (getgenv().request or getgenv().http_request)) or (http and http.request)
+                    if req then local res = req({Url = option.url, Method = "GET"}) if res then data = res.Body or res.body end end
+                end)
+            end
+            if data and #data > 0 and writefile then
+                pcall(function() writefile(fileName, data) if getcustomasset then introSongCache[fileName] = getcustomasset(fileName) end end)
+            end
+            introSongDownloading[fileName] = nil
+            local result = loadExisting()
+            if not result then result = option.url introSongCache[fileName] = result end
+            return result
+        end
+
+        local function preloadIntroSongs()
+            task.spawn(function()
+                pcall(function()
+                    cacheIntroSong(INTRO_MUSIC_OPTIONS[selectedIntroMusic], true)
+                    for _, option in ipairs(INTRO_MUSIC_OPTIONS) do
+                        if option ~= INTRO_MUSIC_OPTIONS[selectedIntroMusic] then
+                            cacheIntroSong(option, true)
+                            task.wait(0.05)
+                        end
+                    end
+                end)
+            end)
+        end
+
+        local function mpStop()
+            MusicPlayer.playing = false
+            if MusicPlayer.sound then
+                pcall(function() MusicPlayer.sound:Stop() end)
+                pcall(function() MusicPlayer.sound:Destroy() end)
+                MusicPlayer.sound = nil
+            end
+        end
+
+        local function mpPlay(idx)
+            idx = idx or MusicPlayer.songIdx or selectedIntroMusic or 1
+            if idx < 1 then idx = #INTRO_MUSIC_OPTIONS end
+            if idx > #INTRO_MUSIC_OPTIONS then idx = 1 end
+            MusicPlayer.songIdx = idx
+            mpStop()
+            local option = INTRO_MUSIC_OPTIONS[idx]
+            if not option then return end
+            if option.silent then MusicPlayer.playing=false; return end
+            task.spawn(function()
+                local soundId = cacheIntroSong(option, true)
+                if not soundId then return end
+                if MusicPlayer.songIdx ~= idx then return end
+                local sound = Instance.new("Sound")
+                sound.Name = "SevenUpMusicPlayer"
+                sound.Volume = math.clamp(MusicPlayer.volume, 0, 10)
+                sound.Looped = MusicPlayer.looped
+                sound.SoundId = soundId
+                sound.Parent = game:GetService("SoundService")
+                MusicPlayer.sound = sound
+                local loadStart = tick()
+                while sound and sound.Parent and not sound.IsLoaded and tick() - loadStart < 15 do task.wait(0.05) end
+                if MusicPlayer.sound ~= sound then pcall(function() sound:Destroy() end) return end
+                MusicPlayer.playing = true
+                pcall(function() sound:Play() end)
+                sound.Ended:Connect(function() if not MusicPlayer.looped then MusicPlayer.playing = false end end)
+            end)
+        end
+
+        local function mpSetVolume(v)
+            MusicPlayer.volume = math.clamp(v, 0, 5)
+            if MusicPlayer.sound then MusicPlayer.sound.Volume = MusicPlayer.volume end
+        end
+
+        local function mpCloseUI()
+            if MusicPlayer.gui then pcall(function() MusicPlayer.gui:Destroy() end) MusicPlayer.gui = nil end
+        end
+
+        local function adaptiveCanColorSequence(scheme, active)
+            local deep = tbl37.bg
+            local base = active and tbl37.accentDark or deep
+            local bright = tbl37.accent
+            local middle = active and tbl37.accent or deep
+            return ColorSequence.new({
+                ColorSequenceKeypoint.new(0,deep),
+                ColorSequenceKeypoint.new(0.22,bright),
+                ColorSequenceKeypoint.new(0.58,middle),
+                ColorSequenceKeypoint.new(1,deep),
+            })
+        end
+
+        local function openMusicPlayerUI()
+            if MusicPlayer.gui and MusicPlayer.gui.Parent then
+                MusicPlayer.gui.Enabled = true
+                return
+            end
+            mpCloseUI()
+            local pg = localPlayer:FindFirstChild("PlayerGui") or localPlayer:WaitForChild("PlayerGui", 5)
+            if not pg then return end
+
+            local scheme = {
+                main = tbl37.accent, mainLight = tbl37.text, mainDark = tbl37.accentDark,
+                stackBg = tbl37.row, rowBg = tbl37.row, border = tbl37.accent,
+                buttonText = tbl37.text, text = tbl37.text, modeBtnBg = tbl37.row,
+                progressBg = tbl37.bg, inputBg = tbl37.bg, inputText = tbl37.text,
+            }
+            local green = tbl37.accent
+            local greenSoft = tbl37.text
+            local bg = tbl37.row
+
+            local gui = Instance.new("ScreenGui")
+            gui.Name = "SevenUpMusicPlayer"
+            gui.ResetOnSpawn = false
+            gui.IgnoreGuiInset = true
+            gui.DisplayOrder = 60
+            gui.Parent = pg
+            MusicPlayer.gui = gui
+
+            local main = Instance.new("Frame", gui)
+            main.Size = UDim2.new(0, 380, 0, 294)
+            main.Position = UDim2.new(0.5, -190, 0.22, 0)
+            main.BackgroundColor3 = bg
+            main.BackgroundTransparency = 0.08
+            main.Active = true
+            main.Draggable = true
+            main.BorderSizePixel = 0
+            main.ClipsDescendants = true
+            Instance.new("UICorner", main).CornerRadius = UDim.new(0, 34)
+            
+            local musicBg=Instance.new("ImageLabel",main)
+            musicBg.Name="MusicBackground"
+            musicBg.Size=UDim2.new(1,0,1,0); musicBg.Position=UDim2.new(0,0,0,0)
+            musicBg.BackgroundTransparency=1; musicBg.BorderSizePixel=0
+            musicBg.Image="rbxassetid://15032171576"; musicBg.ImageTransparency=0.08
+            musicBg.ImageColor3=Color3.fromRGB(255,255,255)
+            musicBg.ScaleType=Enum.ScaleType.Crop; musicBg.ZIndex=0
+            Instance.new("UICorner",musicBg).CornerRadius=UDim.new(0,34)
+            
+            local stroke = Instance.new("UIStroke", main)
+            stroke.Color = scheme.border or green
+            stroke.Thickness = 2
+            local mainGradient=Instance.new("UIGradient",main)
+            mainGradient.Color=adaptiveCanColorSequence(scheme,false)
+            mainGradient.Rotation=12
+            local strokeGradient=Instance.new("UIGradient",stroke)
+            strokeGradient.Color=ColorSequence.new(scheme.mainDark or green,scheme.mainLight or greenSoft)
+            
+            local mainScale=Instance.new("UIScale",main)
+            local viewportWidth=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X) or 800
+            local musicUIScale=math.min(1,math.max(0.72,(viewportWidth-20)/380))
+            mainScale.Scale=musicUIScale*0.88
+            main.BackgroundTransparency=1
+            game:GetService("TweenService"):Create(mainScale, TweenInfo.new(0.42,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=math.clamp(musicUIScale*(MusicPlayer.scale or 1),0.5,1.4)}):Play()
+            game:GetService("TweenService"):Create(main, TweenInfo.new(0.28,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=0.08}):Play()
+
+            local title = Instance.new("TextLabel", main)
+            title.Size = UDim2.new(1, -180, 0, 34)
+            title.Position = UDim2.new(0, 54, 0, 7)
+            title.BackgroundTransparency = 1
+            title.Text = "7UP // MUSIC PLAYER"
+            title.Font = Enum.Font.GothamBlack
+            title.TextSize = 16
+            title.TextColor3 = scheme.mainLight or greenSoft
+            title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local closeBtn = Instance.new("TextButton", main)
+            closeBtn.Size = UDim2.new(0, 30, 0, 30)
+            closeBtn.Position = UDim2.new(1, -40, 0, 8)
+            closeBtn.BackgroundColor3 = scheme.mainDark or green
+            closeBtn.Text = "X"
+            closeBtn.TextColor3 = scheme.buttonText or scheme.text
+            closeBtn.Font = Enum.Font.GothamBold
+            closeBtn.TextSize = 12
+            closeBtn.BorderSizePixel = 0
+            Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+            closeBtn.MouseButton1Click:Connect(function() mpCloseUI() end)
+
+            local btnBgColor = Color3.fromRGB(170, 220, 170)
+            local btnTxtColor = Color3.fromRGB(20, 50, 20)
+            local btnStrokeColor = Color3.fromRGB(80, 160, 80)
+
+            local shrinkBtn = Instance.new("TextButton", main)
+            shrinkBtn.Size = UDim2.new(0, 30, 0, 30)
+            shrinkBtn.Position = UDim2.new(1, -108, 0, 8)
+            shrinkBtn.BackgroundColor3 = btnBgColor
+            shrinkBtn.Text = "-"
+            shrinkBtn.TextColor3 = btnTxtColor
+            shrinkBtn.Font = Enum.Font.GothamBold
+            shrinkBtn.TextSize = 14
+            shrinkBtn.BorderSizePixel = 0
+            shrinkBtn:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", shrinkBtn).CornerRadius = UDim.new(1, 0)
+
+            local growBtn = Instance.new("TextButton", main)
+            growBtn.Size = UDim2.new(0, 30, 0, 30)
+            growBtn.Position = UDim2.new(1, -74, 0, 8)
+            growBtn.BackgroundColor3 = btnBgColor
+            growBtn.Text = "+"
+            growBtn.TextColor3 = btnTxtColor
+            growBtn.Font = Enum.Font.GothamBold
+            growBtn.TextSize = 14
+            growBtn.BorderSizePixel = 0
+            growBtn:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", growBtn).CornerRadius = UDim.new(1, 0)
+
+            local function applyMusicScale(animate)
+                local target = math.clamp(musicUIScale * (MusicPlayer.scale or 1), 0.5, 1.4)
+                if animate then
+                    game:GetService("TweenService"):Create(mainScale,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=target}):Play()
+                else
+                    mainScale.Scale = target
+                end
+            end
+            shrinkBtn.MouseButton1Click:Connect(function()
+                MusicPlayer.scale = math.max(0.5, (MusicPlayer.scale or 1) - 0.1)
+                applyMusicScale(true)
+            end)
+            growBtn.MouseButton1Click:Connect(function()
+                MusicPlayer.scale = math.min(1.4, (MusicPlayer.scale or 1) + 0.1)
+                applyMusicScale(true)
+            end)
+
+            local libraryBtn=Instance.new("TextButton",main)
+            libraryBtn.Name="LibraryButton"
+            libraryBtn.Size=UDim2.new(0,30,0,30); libraryBtn.Position=UDim2.new(0,12,0,8)
+            libraryBtn.BackgroundColor3=btnBgColor; libraryBtn.BackgroundTransparency=0
+            libraryBtn.BorderSizePixel=0; libraryBtn.Text="♫"; libraryBtn.TextColor3=btnTxtColor; libraryBtn.Font=Enum.Font.GothamBlack; libraryBtn.TextSize=15; libraryBtn.ZIndex=8
+            libraryBtn:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner",libraryBtn).CornerRadius=UDim.new(1,0)
+            local libraryStroke=Instance.new("UIStroke",libraryBtn); libraryStroke.Color=btnStrokeColor; libraryStroke.Transparency=0
+            libraryStroke:SetAttribute("_NoSevenUpTheme", true)
+
+            local songCard=Instance.new("Frame",main)
+            songCard.Size=UDim2.new(1,-32,0,86); songCard.Position=UDim2.new(0,16,0,50)
+            songCard.BackgroundColor3=scheme.rowBg; songCard.BackgroundTransparency=0.1; songCard.BorderSizePixel=0
+            Instance.new("UICorner",songCard).CornerRadius=UDim.new(0,20)
+            local songStroke=Instance.new("UIStroke",songCard); songStroke.Color=scheme.mainLight or greenSoft; songStroke.Transparency=0.22; songStroke.Thickness=1.5
+            local songCardGradient=Instance.new("UIGradient",songCard)
+            songCardGradient.Color=adaptiveCanColorSequence(scheme,true)
+            
+            local songLbl = Instance.new("TextLabel", songCard)
+            songLbl.Size = UDim2.new(1, -16, 0, 24)
+            songLbl.Position = UDim2.new(0, 8, 0, 12)
+            songLbl.BackgroundTransparency = 1
+            songLbl.Text = (INTRO_MUSIC_OPTIONS[MusicPlayer.songIdx] and INTRO_MUSIC_OPTIONS[MusicPlayer.songIdx].name) or "Song"
+            songLbl.Font = Enum.Font.GothamBold
+            songLbl.TextSize = 13
+            songLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            songLbl.TextXAlignment = Enum.TextXAlignment.Left
+            songLbl.TextStrokeColor3=Color3.fromRGB(0,0,0); songLbl.TextStrokeTransparency=0.15; songLbl.ZIndex=3
+            
+            local function refreshSongLbl()
+                local opt = INTRO_MUSIC_OPTIONS[MusicPlayer.songIdx]
+                songLbl.Text = opt and opt.name or "Song"
+            end
+
+            local libraryPanel=Instance.new("Frame",main)
+            libraryPanel.Name="MusicLibrary"
+            libraryPanel.Size=UDim2.new(0,220,1,0); libraryPanel.Position=UDim2.new(0,-206,0,0)
+            libraryPanel.BackgroundColor3=scheme.stackBg or scheme.rowBg; libraryPanel.BackgroundTransparency=0.48
+            libraryPanel.BorderSizePixel=0; libraryPanel.ClipsDescendants=true; libraryPanel.Visible=false
+            Instance.new("UICorner",libraryPanel).CornerRadius=UDim.new(0,12)
+            local libraryPanelStroke=Instance.new("UIStroke",libraryPanel); libraryPanelStroke.Color=scheme.main; libraryPanelStroke.Transparency=0.2
+            local libraryPanelGradient=Instance.new("UIGradient",libraryPanel)
+            libraryPanelGradient.Color=adaptiveCanColorSequence(scheme,false)
+
+            local libraryTitle=Instance.new("TextLabel",libraryPanel)
+            libraryTitle.Size=UDim2.new(1,-24,0,24); libraryTitle.Position=UDim2.new(0,12,0,8)
+            libraryTitle.BackgroundTransparency=1; libraryTitle.Text="LIBRARY"; libraryTitle.TextColor3=scheme.mainLight or greenSoft
+            libraryTitle.Font=Enum.Font.GothamBlack; libraryTitle.TextSize=12; libraryTitle.TextXAlignment=Enum.TextXAlignment.Left
+
+            local searchBox=Instance.new("TextBox",libraryPanel)
+            searchBox.Size=UDim2.new(1,-24,0,32); searchBox.Position=UDim2.new(0,12,0,36)
+            searchBox.BackgroundColor3=scheme.inputBg or scheme.modeBtnBg; searchBox.BackgroundTransparency=0.28
+            searchBox.BorderSizePixel=0; searchBox.PlaceholderText="Search songs"; searchBox.Text=""
+            searchBox.TextColor3=Color3.fromRGB(255,255,255); searchBox.PlaceholderColor3=Color3.fromRGB(145,150,175)
+            searchBox.Font=Enum.Font.GothamMedium; searchBox.TextSize=11; searchBox.ClearTextOnFocus=false
+            Instance.new("UICorner",searchBox).CornerRadius=UDim.new(0,8)
+            local searchStroke=Instance.new("UIStroke",searchBox); searchStroke.Color=green; searchStroke.Transparency=0.52
+
+            local songList=Instance.new("ScrollingFrame",libraryPanel)
+            songList.Size=UDim2.new(1,-24,1,-82); songList.Position=UDim2.new(0,12,0,74)
+            songList.BackgroundTransparency=1; songList.BorderSizePixel=0; songList.ScrollBarThickness=0
+            songList.ScrollBarImageColor3=green; songList.AutomaticCanvasSize=Enum.AutomaticSize.Y; songList.CanvasSize=UDim2.new()
+            local songLayout=Instance.new("UIListLayout",songList); songLayout.Padding=UDim.new(0,5); songLayout.SortOrder=Enum.SortOrder.LayoutOrder
+
+            local function rebuildLibrary()
+                local query=string.lower(searchBox.Text or "")
+                local live=scheme
+                for _,child in ipairs(songList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+                for songIndex,option in ipairs(INTRO_MUSIC_OPTIONS) do
+                    local songName=tostring(option.name or ("Song "..songIndex))
+                    if query=="" or string.find(string.lower(songName),query,1,true) then
+                        local row=Instance.new("TextButton",songList)
+                        row.Size=UDim2.new(1,-4,0,34); row.BackgroundColor3=songIndex==MusicPlayer.songIdx and (live.mainDark or live.main) or (live.modeBtnBg or live.rowBg)
+                        row.BackgroundTransparency=0.08; row.BorderSizePixel=0; row.Text="  "..songName
+                        row.TextColor3=live.mainLight or live.text; row.Font=Enum.Font.GothamBold; row.TextSize=11
+                        row.TextXAlignment=Enum.TextXAlignment.Left; row.LayoutOrder=songIndex; row.AutoButtonColor=false
+                        Instance.new("UICorner",row).CornerRadius=UDim.new(0,8)
+                        local rowStroke=Instance.new("UIStroke",row); rowStroke.Color=songIndex==MusicPlayer.songIdx and live.main or live.mainDark; rowStroke.Transparency=0.45
+                        row.MouseEnter:Connect(function()
+                            game:GetService("TweenService"):Create(row,TweenInfo.new(0.12),{BackgroundColor3=live.main,BackgroundTransparency=0}):Play()
+                        end)
+                        row.MouseLeave:Connect(function()
+                            game:GetService("TweenService"):Create(row,TweenInfo.new(0.12),{BackgroundColor3=songIndex==MusicPlayer.songIdx and (live.mainDark or live.main) or (live.modeBtnBg or live.rowBg),BackgroundTransparency=0.08}):Play()
+                        end)
+                        row.MouseButton1Click:Connect(function()
+                            MusicPlayer.songIdx=songIndex
+                            selectedIntroMusic=songIndex
+                            refreshSongLbl(); saveIntroSongIdx(); mpPlay(songIndex)
+                            rebuildLibrary()
+                        end)
+                    end
+                end
+            end
+            searchBox:GetPropertyChangedSignal("Text"):Connect(rebuildLibrary)
+            local libraryOpen=false
+            libraryBtn.MouseButton1Click:Connect(function()
+                libraryOpen=not libraryOpen
+                libraryPanel.Visible=true
+                if libraryOpen then
+                    libraryPanel.Position=UDim2.new(0,-206,0,0); libraryPanel.BackgroundTransparency=1
+                    game:GetService("TweenService"):Create(libraryPanel,TweenInfo.new(0.36,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(0,-232,0,0),BackgroundTransparency=0.48}):Play()
+                    rebuildLibrary(); task.defer(function() searchBox:CaptureFocus() end)
+                else
+                    game:GetService("TweenService"):Create(libraryPanel,TweenInfo.new(0.2),{Position=UDim2.new(0,-206,0,0),BackgroundTransparency=1}):Play()
+                    task.delay(0.22,function() if not libraryOpen and libraryPanel.Parent then libraryPanel.Visible=false end end)
+                end
+            end)
+
+            local prevBtn = Instance.new("TextButton", main)
+            prevBtn.Size = UDim2.new(0, 48, 0, 32)
+            prevBtn.Position = UDim2.new(0.5, -94, 0, 150)
+            prevBtn.BackgroundColor3 = btnBgColor
+            prevBtn.Text = "<<"
+            prevBtn.TextColor3 = btnTxtColor
+            prevBtn.Font = Enum.Font.GothamBold
+            prevBtn.TextSize = 14
+            prevBtn.BorderSizePixel = 0
+            prevBtn:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", prevBtn).CornerRadius = UDim.new(1, 0)
+
+            local playBtn = Instance.new("TextButton", main)
+            playBtn.Size = UDim2.new(0, 72, 0, 36)
+            playBtn.Position = UDim2.new(0.5, -36, 0, 148)
+            playBtn.BackgroundColor3 = btnBgColor
+            playBtn.Text = MusicPlayer.playing and "STOP" or "PLAY"
+            playBtn.TextColor3 = btnTxtColor
+            playBtn.Font = Enum.Font.GothamBlack
+            playBtn.TextSize = 13
+            playBtn.BorderSizePixel = 0
+            playBtn:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", playBtn).CornerRadius = UDim.new(1, 0)
+
+            local nextBtn = Instance.new("TextButton", main)
+            nextBtn.Size = UDim2.new(0, 48, 0, 32)
+            nextBtn.Position = UDim2.new(0.5, 46, 0, 150)
+            nextBtn.BackgroundColor3 = btnBgColor
+            nextBtn.Text = ">>"
+            nextBtn.TextColor3 = btnTxtColor
+            nextBtn.Font = Enum.Font.GothamBold
+            nextBtn.TextSize = 14
+            nextBtn.BorderSizePixel = 0
+            nextBtn:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", nextBtn).CornerRadius = UDim.new(1, 0)
+
+            local volLbl = Instance.new("TextLabel", main)
+            volLbl.Size = UDim2.new(1, -24, 0, 18)
+            volLbl.Position = UDim2.new(0, 12, 0, 193)
+            volLbl.BackgroundTransparency = 1
+            volLbl.Text = "Volume  " .. string.format("%.1f", MusicPlayer.volume)
+            volLbl.Font = Enum.Font.Gotham
+            volLbl.TextSize = 12
+            volLbl.TextColor3 = greenSoft
+            volLbl.TextXAlignment = Enum.TextXAlignment.Center
+
+            local quieter = Instance.new("TextButton", main)
+            quieter.Size = UDim2.new(0, 70, 0, 28)
+            quieter.Position = UDim2.new(0.5, -110, 0, 222)
+            quieter.BackgroundColor3 = btnBgColor
+            quieter.Text = "- QUIETER"
+            quieter.TextColor3 = btnTxtColor
+            quieter.Font = Enum.Font.GothamBold
+            quieter.TextSize = 11
+            quieter.BorderSizePixel = 0
+            quieter:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", quieter).CornerRadius = UDim.new(1, 0)
+
+            local louder = Instance.new("TextButton", main)
+            louder.Size = UDim2.new(0, 70, 0, 28)
+            louder.Position = UDim2.new(0.5, 40, 0, 222)
+            louder.BackgroundColor3 = btnBgColor
+            louder.Text = "LOUDER +"
+            louder.TextColor3 = btnTxtColor
+            louder.Font = Enum.Font.GothamBold
+            louder.TextSize = 11
+            louder.BorderSizePixel = 0
+            louder:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", louder).CornerRadius = UDim.new(1, 0)
+
+            local loopBtn = Instance.new("TextButton", main)
+            loopBtn.Size = UDim2.new(0, 70, 0, 28)
+            loopBtn.Position = UDim2.new(0.5, -35, 0, 222)
+            loopBtn.BackgroundColor3 = MusicPlayer.looped and btnBgColor or Color3.fromRGB(150, 200, 150)
+            loopBtn.Text = MusicPlayer.looped and "LOOP ON" or "LOOP OFF"
+            loopBtn.TextColor3 = btnTxtColor
+            loopBtn.Font = Enum.Font.GothamBold
+            loopBtn.TextSize = 11
+            loopBtn.BorderSizePixel = 0
+            loopBtn:SetAttribute("_NoSevenUpTheme", true)
+            Instance.new("UICorner", loopBtn).CornerRadius = UDim.new(1, 0)
+
+            local function syncPlayBtn()
+                playBtn.Text = MusicPlayer.playing and "STOP" or "PLAY"
+                playBtn.BackgroundColor3 = MusicPlayer.playing and (scheme.mainDark or scheme.main) or scheme.main
+            end
+
+            prevBtn.MouseButton1Click:Connect(function()
+                MusicPlayer.songIdx = MusicPlayer.songIdx - 1
+                if MusicPlayer.songIdx < 1 then MusicPlayer.songIdx = #INTRO_MUSIC_OPTIONS end
+                refreshSongLbl()
+                if MusicPlayer.playing then mpPlay(MusicPlayer.songIdx) end
+            end)
+            nextBtn.MouseButton1Click:Connect(function()
+                MusicPlayer.songIdx = MusicPlayer.songIdx + 1
+                if MusicPlayer.songIdx > #INTRO_MUSIC_OPTIONS then MusicPlayer.songIdx = 1 end
+                refreshSongLbl()
+                if MusicPlayer.playing then mpPlay(MusicPlayer.songIdx) end
+            end)
+            playBtn.MouseButton1Click:Connect(function()
+                if MusicPlayer.playing then
+                    mpStop()
+                    syncPlayBtn()
+                else
+                    mpPlay(MusicPlayer.songIdx)
+                    task.delay(0.3, syncPlayBtn)
+                    task.delay(1.0, syncPlayBtn)
+                end
+            end)
+            quieter.MouseButton1Click:Connect(function()
+                mpSetVolume(MusicPlayer.volume - 0.2)
+                volLbl.Text = "Volume  " .. string.format("%.1f", MusicPlayer.volume)
+            end)
+            louder.MouseButton1Click:Connect(function()
+                mpSetVolume(MusicPlayer.volume + 0.2)
+                volLbl.Text = "Volume  " .. string.format("%.1f", MusicPlayer.volume)
+            end)
+            loopBtn.MouseButton1Click:Connect(function()
+                MusicPlayer.looped = not MusicPlayer.looped
+                loopBtn.Text = MusicPlayer.looped and "LOOP ON" or "LOOP OFF"
+                loopBtn.BackgroundColor3 = MusicPlayer.looped and scheme.main or (scheme.modeBtnBg or bg)
+                if MusicPlayer.sound then
+                    MusicPlayer.sound.Looped = MusicPlayer.looped
+                end
+            end)
+
+            task.spawn(function()
+                while MusicPlayer.gui and MusicPlayer.gui.Parent do
+                    syncPlayBtn()
+                    task.wait(0.5)
+                end
+            end)
+
+            MusicPlayer.songIdx = MusicPlayer.songIdx or selectedIntroMusic or 1
+            refreshSongLbl()
+        end
+        
+        _G.SevenUpOpenMusicPlayer = openMusicPlayerUI
+        preloadIntroSongs()
+        -- ============================================================
+
         Utility = createScrollingFrame("Utility")
         createTextLabel(Utility, "Players")
+        
+        -- MUSIC PLAYER BUTTON IN VISUAL TAB
+        local musicBtnRow = fn63(Utility, "MUSIC PLAYER", { button = true })
+        local musicBtnLbl = musicBtnRow:FindFirstChildOfClass("TextLabel")
+        if musicBtnLbl then musicBtnLbl.TextColor3 = tbl37.accent end
+        local musicBtnClk = Instance.new("TextButton", musicBtnRow)
+        musicBtnClk.BackgroundTransparency = 1
+        musicBtnClk.Text = ""
+        musicBtnClk.Size = UDim2.new(1,0,1,0)
+        musicBtnClk.ZIndex = 200
+        musicBtnClk.MouseButton1Click:Connect(function()
+            _G.SevenUpOpenMusicPlayer()
+        end)
         local esp = fn63(Utility, "ESP", { arrow = true, toggle = true })
         local showTracer = fn63(Utility, "Show Tracer", { toggle = true })
         fn63(Utility, "Ragdoll Countdown", { toggle = true })
@@ -14993,401 +15700,298 @@ local function _SevenUpMain()
       fn63(Utility, "Potato Graphics", { toggle = true })
       fn63(Utility, "FOV Change", { toggle = true })
       fn63(Utility, "FOV Value", { value = "120" })
-      createTextLabel(Utility, "SEVENUP Skin")
-      fn63(Utility, "SEVENUP Skin", { toggle = true })
+      createTextLabel(Utility, "7UP Skin & Outfits")
+      local sevenupHeadlessToggle = fn63(Utility, "Headless", { toggle = true })
+      local sevenupKorbloxToggle  = fn63(Utility, "Korblox", { toggle = true })
+            -- ═══════════════════════════════════════════════════════════════
+      -- 7UP Skin / Outfit UI
+      -- ═══════════════════════════════════════════════════════════════
+      createTextLabel(Utility, "7UP Skin & Outfits")
 
-      local function fn67()
-        local flag29 = sevenupSafeModeEnabled == true
-        local open = createTextButton(fn63(Utility, "Skin Gallery"), "OPEN", 66)
-        open.Name = "OpenSkinGallery"
-        open.Position = UDim2.new(1, -76, 0.5, -12)
-        open.TextColor3 = tbl37.accent
-        local sevenupSkinGallery = screenGui:FindFirstChild("SevenUpSkinGallery")
+      local skinRow = fn63(Utility, "Skin & Outfit Preview", { button = true })
+      local skinRowLabel = skinRow:FindFirstChildOfClass("TextLabel")
+      if skinRowLabel then skinRowLabel.TextColor3 = tbl37.accent end
+      local skinOpen = Instance.new("TextButton", skinRow)
+      skinOpen.BackgroundTransparency = 1
+      skinOpen.Text = ""
+      skinOpen.Size = UDim2.new(1, 0, 1, 0)
+      skinOpen.ZIndex = 200
+      skinOpen.MouseButton1Click:Connect(function() _G._SevenUpOpenSkinPicker() end)
 
-        if sevenupSkinGallery then
-          sevenupSkinGallery:Destroy()
-        end
+      local sevenupHeadlessToggle = fn63(Utility, "Headless", { toggle = true })
+      local sevenupKorbloxToggle  = fn63(Utility, "Korblox",  { toggle = true })
 
-        local canvasGroup = Instance.new("CanvasGroup")
-        canvasGroup.Name = "SevenUpSkinGallery"
-        canvasGroup.AnchorPoint = Vector2.new(0.5, 0.5)
-        canvasGroup.Position = UDim2.fromScale(0.5, 0.5)
-        canvasGroup.Size = flag29 and UDim2.new(0, 280, 0, 300) or UDim2.new(0, 360, 0, 350)
-        canvasGroup.BackgroundColor3 = tbl37.panel
-        canvasGroup.BorderSizePixel = 0
-        canvasGroup.Visible = false
-        canvasGroup.ZIndex = 40
-        canvasGroup.Parent = screenGui
-        fn56(canvasGroup, 14)
-        local uiGradient = Instance.new("UIGradient")
-        uiGradient.Color = ColorSequence.new(tbl37.panel, tbl37.row)
-        uiGradient.Rotation = 35
-        uiGradient.Parent = canvasGroup
-        local frame4 = Instance.new("Frame")
-        frame4.BackgroundTransparency = 1
-        frame4.Size = UDim2.new(1, -28, 0, 35)
-        frame4.Position = UDim2.new(0, 14, 0, 8)
-        frame4.ZIndex = 121
-        frame4.Parent = canvasGroup
-        frame4.Active = true
-        local v92 = fn58
-        local n34 = flag29 and 16 or 18
-        local gothamBlack = Enum.Font.GothamBlack
-        local text = tbl37.text
-        local sevenupSkin = v92(frame4, "SEVENUP SKIN", n34, UDim2.new(0, 0, 0, 2), gothamBlack, text)
-        sevenupSkin.ZIndex = 122
-        local v93 = tbl38.gallery(canvasGroup, frame4, sevenupSkin)
-        local v94 = createTextButton(frame4, "×", 25)
-        v94.Name = "CloseSkinGallery"
-        v94.TextSize = 20
-        v94.Position = UDim2.new(1, -32, 0, 7)
-        v94.ZIndex = 123
-        v94.BackgroundTransparency = 1
-        local uiStroke = v94:FindFirstChildOfClass("UIStroke")
-
-        if uiStroke then
-          uiStroke:Destroy()
-        end
-
-        local flag30 = false
-        local v95 = nil
-        local v96 = nil
-        local v97 = nil
-
-        local function fn68(arg)
-          local n35 = arg.Position - v95
-          canvasGroup.Position = UDim2.new(v96.X.Scale, v96.X.Offset + n35.X, v96.Y.Scale, v96.Y.Offset + n35.Y)
-        end
-
-        frame4.InputBegan:Connect(function(input)
-          if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
-            return
-          end
-          local position2 = input.Position
-          local position3 = canvasGroup.Position
-          flag30 = true
-          v95 = position2
-          v96 = position3
-          v97 = input
-
-          input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-              flag30 = false
-            end
-          end)
+      local function makeSevenUpOutfitButton(name, info, getState, setState)
+        local row = fn63(Utility, name, { button = true })
+        local rowLabel = row:FindFirstChildOfClass("TextLabel")
+        if rowLabel then rowLabel.TextColor3 = tbl37.text end
+        local infoLbl = Instance.new("TextLabel", row)
+        infoLbl.Size = UDim2.new(1, -180, 0, 12)
+        infoLbl.Position = UDim2.new(0, 12, 0, 20)
+        infoLbl.BackgroundTransparency = 1
+        infoLbl.Text = info
+        infoLbl.TextColor3 = Color3.fromRGB(150, 220, 175)
+        infoLbl.Font = Enum.Font.Gotham
+        infoLbl.TextSize = 9
+        infoLbl.TextXAlignment = Enum.TextXAlignment.Left
+        infoLbl.ZIndex = 8
+        local btn = Instance.new("TextButton", row)
+        btn.Size = UDim2.new(0, 70, 0, 26)
+        btn.Position = UDim2.new(1, -82, 0.5, -13)
+        btn.BackgroundColor3 = getState() and tbl37.accent or tbl37.row
+        btn.BorderSizePixel = 0
+        btn.Text = getState() and "ON" or "OFF"
+        btn.TextColor3 = getState() and Color3.fromRGB(0,0,0) or tbl37.text
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 11
+        btn.ZIndex = 8
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        btn.MouseButton1Click:Connect(function()
+          local newState = not getState()
+          _G._SevenUpOutfit1Applied = false
+          _G._SevenUpOutfit2Applied = false
+          _G._SevenUpOutfit3Applied = false
+          setState(newState)
+          _G._SevenUpSkin.Apply(localPlayer.Character)
+          for _, fn in ipairs(_G._SevenUpOutfitButtonRefreshers) do pcall(fn) end
+          pcall(saveSevenUpSettings)
         end)
-
-        frame4.InputChanged:Connect(function(input)
-          if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            v97 = input
-          end
+        table.insert(_G._SevenUpOutfitButtonRefreshers, function()
+          local on = getState()
+          btn.BackgroundColor3 = on and tbl37.accent or tbl37.row
+          btn.Text = on and "ON" or "OFF"
+          btn.TextColor3 = on and Color3.fromRGB(0,0,0) or tbl37.text
         end)
-
-        UserInputService.InputChanged:Connect(function(input)
-          if flag30 and input == v97 then
-            fn68(input)
-          end
-        end)
-
-        local scrollingFrame = Instance.new("ScrollingFrame")
-        scrollingFrame.Name = "PresetCards"
-        scrollingFrame.BackgroundTransparency = 1
-        scrollingFrame.BorderSizePixel = 0
-        scrollingFrame.Position = UDim2.new(0, 14, 0, 50)
-        scrollingFrame.Size = UDim2.new(1, -28, 1, -64)
-        scrollingFrame.CanvasSize = UDim2.new()
-        scrollingFrame.ScrollBarThickness = 0
-        scrollingFrame.ScrollBarImageColor3 = tbl37.accent
-        scrollingFrame.ZIndex = 121
-        scrollingFrame.Parent = canvasGroup
-        local uiGridLayout = Instance.new("UIGridLayout")
-        uiGridLayout.CellSize = flag29 and UDim2.new(0, 86, 0, 112) or UDim2.new(0, 106, 0, 134)
-        uiGridLayout.CellPadding = flag29 and UDim2.new(0, 2, 0, 10) or UDim2.new(0, 4, 0, 5)
-        uiGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-        uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        uiGridLayout.Parent = scrollingFrame
-
-        uiGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-          scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, uiGridLayout.AbsoluteContentSize.Y + 4)
-        end)
-
-        local tbl44 = {}
-        local n35 = 0
-        local v98 = 0
-
-        local function sevenupRefreshSkinGallery()
-          local sevenupSkin2 = _G._SevenUpSkin
-          sevenupSkin2 = sevenupSkin2 and sevenupSkin2.GetPreset() or "SEVENUP"
-
-          for _, v99 in ipairs(tbl44) do
-            local visible = v99.name == sevenupSkin2
-            v99.card:SetAttribute("Selected", visible)
-            tbl38.tween(v99.card, "surface", 0.18, {
-              BackgroundColor3 = visible and Color3.fromRGB(27, 27, 27) or Color3.fromRGB(15, 15, 15),
-            })
-            v99.stroke.Color = Color3.fromRGB(255, 255, 255)
-            v99.stroke.Thickness = 1
-            tbl38.tween(v99.stroke, "selection", 0.18, { Transparency = visible and 0.42 or 0.92 })
-            v99.nameLabel.TextColor3 = visible and Color3.fromRGB(255, 255, 240) or Color3.fromRGB(175, 175, 175)
-            v99.mark.Visible = visible
-          end
-        end
-
-        _G._SevenUpRefreshSkinGallery = sevenupRefreshSkinGallery
-
-        local function fn69(arg, layoutOrder)
-          local textButton2 = Instance.new("TextButton")
-          textButton2.Name = arg .. "Preview"
-          textButton2.LayoutOrder = layoutOrder
-          textButton2.BackgroundColor3 = canvasGroup.BackgroundColor3
-          textButton2.BackgroundTransparency = 0
-          textButton2.BorderSizePixel = 0
-          textButton2.Text = ""
-          textButton2.AutoButtonColor = false
-          textButton2.ZIndex = 122
-          textButton2.Parent = scrollingFrame
-          fn56(textButton2, 12)
-          local uiStroke2 = Instance.new("UIStroke")
-          uiStroke2.Color = Color3.fromRGB(60, 70, 100)
-          uiStroke2.Transparency = 0.18
-          uiStroke2.Parent = textButton2
-          local viewportFrame = Instance.new("ViewportFrame")
-          viewportFrame.Name = "AvatarPreview"
-          viewportFrame.BackgroundColor3 = canvasGroup.BackgroundColor3
-          viewportFrame.BackgroundTransparency = 1
-          viewportFrame.BorderSizePixel = 0
-          viewportFrame.Position = UDim2.new(0, 7, 0, 7)
-          viewportFrame.Size = UDim2.new(1, -14, 1, -38)
-          viewportFrame.Ambient = Color3.fromRGB(210, 210, 210)
-          viewportFrame.LightColor = Color3.fromRGB(255, 255, 240)
-          viewportFrame.LightDirection = Vector3.new(-1, -1, -1)
-          viewportFrame.ZIndex = 123
-          viewportFrame.Parent = textButton2
-          fn56(viewportFrame, 8)
-          local gothamMedium = Enum.Font.GothamMedium
-          local accent = tbl37.accent
-          local center = Enum.TextXAlignment.Center
-          local v99 = fn58(viewportFrame, "LOADING\nPREVIEW", 10, UDim2.new(0, 0, 0, 0), gothamMedium, accent, center)
-          v99.Size = UDim2.fromScale(1, 1)
-          v99.TextYAlignment = Enum.TextYAlignment.Center
-          v99.ZIndex = 124
-          local gothamMedium2 = Enum.Font.GothamMedium
-          local text2 = tbl37.text
-          local center2 = Enum.TextXAlignment.Center
-          local v100 = fn58(textButton2, arg, 10, UDim2.new(0, 24, 1, -26), gothamMedium2, text2, center2)
-          v100.Size = UDim2.new(1, -16, 0, 19)
-          v100.ZIndex = 123
-          local frame5 = Instance.new("Frame", textButton2)
-          frame5.Name = "SelectedMarker"
-          frame5.Size = UDim2.new(0, 14, 0, 2)
-          frame5.Position = UDim2.new(0.5, -9, 1, -4)
-          frame5.BackgroundColor3 = Color3.fromRGB(240, 255, 255)
-          frame5.BorderSizePixel = 0
-          frame5.ZIndex = 124
-          frame5.Visible = false
-          fn56(frame5, 1)
-
-          for _, v101 in ipairs({ textButton2, uiStroke2, viewportFrame, v100, frame5, v99 }) do
-            v101:SetAttribute("_NoSevenUpTheme", true)
-          end
-
-          textButton2.MouseEnter:Connect(function()
-            tbl38.tween(textButton2, "surface", 0.14, { BackgroundColor3 = Color3.fromRGB(33, 33, 33) })
-          end)
-
-          textButton2.MouseLeave:Connect(function()
-            tbl38.tween(textButton2, "surface", 0.14, {
-              BackgroundColor3 = textButton2:GetAttribute("Selected") and Color3.fromRGB(27, 27, 27) or Color3.fromRGB(15, 15, 15),
-            })
-          end)
-
-          local tbl45 = {
-            name = arg,
-            card = textButton2,
-            stroke = uiStroke2,
-            nameLabel = v100,
-            mark = frame5,
-            world = nil,
-            rig = nil,
-            joints = {},
-            phase = layoutOrder * 0.47,
-          }
-
-          tbl44[#tbl44 + 1] = tbl45
-
-          textButton2.Activated:Connect(function()
-            local sevenupSkin2 = _G._SevenUpSkin
-
-            if sevenupSkin2 then
-              sevenupSkin2.SetPreset(arg)
-            end
-
-            for _, v101 in ipairs(tbl44) do
-              v101.selectStartedAt = nil
-            end
-
-            tbl45.selectStartedAt = os.clock()
-            sevenupRefreshSkinGallery()
-          end)
-
-          task.spawn(function()
-            local sevenupSkin2 = _G._SevenUpSkin
-            local createPreviewRig = sevenupSkin2 and sevenupSkin2.CreatePreviewRig and sevenupSkin2.CreatePreviewRig(arg)
-            if not createPreviewRig or not viewportFrame.Parent then
-              v99.Text = "PREVIEW\nUNAVAILABLE"
-              return
-            end
-
-            for _, descendant in ipairs(createPreviewRig:GetDescendants()) do
-              if descendant:IsA("BasePart") then
-                descendant.Anchored = true
-                descendant.CanCollide = false
-              end
-            end
-
-            local worldModel = Instance.new("WorldModel")
-            worldModel.Parent = viewportFrame
-            createPreviewRig:PivotTo(CFrame.new())
-            createPreviewRig.Parent = worldModel
-
-            for _, v101 in ipairs({
-              "Neck",
-              "Waist",
-              "RightShoulder",
-              "LeftShoulder",
-              "RightHip",
-              "LeftHip",
-            }) do
-              local v102 = createPreviewRig:FindFirstChild(v101, true)
-
-              if v102 and v102:IsA("Motor6D") then
-                tbl45.joints[v101] = v102
-              end
-            end
-
-            local boundingBox, v101 = createPreviewRig:GetBoundingBox()
-            local camera = Instance.new("Camera")
-            camera.FieldOfView = 70
-            local position2 = boundingBox.Position
-            local previewDistance = math.max(v101.X, v101.Y) * 1.7
-            camera.CFrame = CFrame.new(position2 + Vector3.new(0, v101.Y * 0.06, previewDistance), position2)
-            camera.Parent = viewportFrame
-            viewportFrame.CurrentCamera = camera
-            v99:Destroy()
-            local v102 = tbl45
-            tbl45.world = worldModel
-            v102.rig = createPreviewRig
-            local v103 = tbl45
-            local v104 = tbl45
-            local cFrame = camera.CFrame
-            tbl45.camera = camera
-            v103.baseCameraCFrame = cFrame
-            v104.previewDistance = previewDistance
-          end)
-        end
-
-        local sevenupSkin2 = _G._SevenUpSkin
-
-        if sevenupSkin2 then
-          for i, preset in ipairs(sevenupSkin2.Presets) do
-            fn69(preset, i)
-          end
-        end
-
-        sevenupRefreshSkinGallery()
-
-        RunService.RenderStepped:Connect(function(deltaTime)
-          if not canvasGroup.Visible then
-            return
-          end
-
-          if _G._SevenUpVoltCompatibility then
-            return
-          end
-          n35 = (n35 + deltaTime * 0.8) % 6.2831853071795862
-          v98 += deltaTime
-
-          for _, v99 in ipairs(tbl44) do
-            if v99.rig and v99.rig.Parent then
-              local n36 = v98 * 1.7 + v99.phase
-              local v100 = math.sin(n36)
-              local n37 = math.cos(n36 * 2) * 0.035
-              local selectStartedAt = v99.selectStartedAt
-
-              if selectStartedAt then
-                local selectStartedAt2 = v99.selectStartedAt
-                selectStartedAt = os.clock() - selectStartedAt2
-              end
-
-              selectStartedAt = selectStartedAt or nil
-              local n38 = selectStartedAt and math.clamp(selectStartedAt / 0.65, 0, 1) or 0
-              local n39 = (1 - (1 - n38) ^ 3) * 6.2831853071795862
-              v99.rig:PivotTo(CFrame.new(0, n37, 0) * CFrame.Angles(0, n35 + n39, 0))
-              local joints = v99.joints
-
-              if joints.Neck then
-                local v101 = 0
-                local rad = math.rad
-                joints.Neck.Transform = CFrame.Angles(math.rad(10 * v100), v101, rad(2 * v100))
-              end
-
-              if joints.Waist then
-                local rad = math.rad
-                local n40 = 3 * v100
-                joints.Waist.Transform = CFrame.Angles(0, math.rad(10 * v100), rad(n40))
-              end
-
-              if joints.RightShoulder then
-                local rad = math.rad
-                joints.RightShoulder.Transform = CFrame.Angles(math.rad(5 * v100), 0, rad(2 * v100))
-              end
-
-              if joints.LeftShoulder then
-                local rad = math.rad
-                joints.LeftShoulder.Transform = CFrame.Angles(math.rad(-5 * v100), 0, rad(-2 * v100))
-              end
-
-              if joints.RightHip then
-                joints.RightHip.Transform = CFrame.Angles(math.rad(-2 * v100), 0, 0)
-              end
-
-              if joints.LeftHip then
-                local v101 = 0
-                joints.LeftHip.Transform = CFrame.Angles(math.rad(2 * v100), v101, 0)
-              end
-
-              if v99.camera and v99.baseCameraCFrame then
-                local n40 = 1 - (1 - n38) ^ 2
-
-                if 0 < n40 then
-                  local head = v99.rig:FindFirstChild("Head")
-
-                  if head and head:IsA("BasePart") then
-                    local n41 = head.Position + Vector3.new(0, 0.04, 0)
-                    local n42 = math.max(1.5, (v99.previewDistance or 7) * (1 - 0.68 * n40))
-                    v99.camera.FieldOfView = 70 - 18 * n40
-                    v99.camera.CFrame = CFrame.new(n41 + Vector3.new(0, 0.05, n42), n41)
-                  end
-                else
-                  v99.camera.FieldOfView = 42
-                  v99.camera.CFrame = v99.baseCameraCFrame
-                end
-              end
-            end
-          end
-        end)
-
-        open.Activated:Connect(function()
-          sevenupRefreshSkinGallery()
-          v93(true)
-        end)
-
-        v94.Activated:Connect(function()
-          v93(false)
-        end)
+        return row
       end
 
-      fn67()
+      makeSevenUpOutfitButton("Legacy 1", "Classic red/black style",
+        function() return _G._SevenUpOutfit1Applied end,
+        function(v) _G._SevenUpOutfit1Applied = v end)
+      makeSevenUpOutfitButton("Try Hard 1", "Try-hard head + fit",
+        function() return _G._SevenUpOutfit2Applied end,
+        function(v) _G._SevenUpOutfit2Applied = v end)
+      makeSevenUpOutfitButton("Venom Fit", "Black suit fit",
+        function() return _G._SevenUpOutfit3Applied end,
+        function(v) _G._SevenUpOutfit3Applied = v end)
+
+      -- Popup (Skin Selector)
+      _G._SevenUpOpenSkinPicker = function()
+        local pGui = localPlayer:FindFirstChild("PlayerGui") or localPlayer:WaitForChild("PlayerGui", 5)
+        if not pGui then return end
+        local old = pGui:FindFirstChild("SevenUpSkinPicker")
+        if old then old:Destroy() end
+
+        local SKIN_OPTIONS = {
+          {name = "7UP SKIN", type = "custom", variant = 1},
+          {name = "BART SKIN", type = "custom", variant = 2},
+          {name = "Legacy 1", type = "outfit", variant = 1},
+          {name = "Try Hard 1", type = "outfit", variant = 2},
+          {name = "Venom Fit", type = "outfit", variant = 3},
+        }
+
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "SevenUpSkinPicker"
+        gui.ResetOnSpawn = false
+        gui.IgnoreGuiInset = true
+        gui.DisplayOrder = 60
+        gui.Parent = pGui
+
+        local dim = Instance.new("TextButton", gui)
+        dim.Size = UDim2.new(1,0,1,0)
+        dim.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        dim.BackgroundTransparency = 0.4
+        dim.BorderSizePixel = 0
+        dim.Text = ""; dim.AutoButtonColor = false; dim.ZIndex = 120
+
+        local panel = Instance.new("Frame", dim)
+        panel.AnchorPoint = Vector2.new(0.5,0.5)
+        panel.Position = UDim2.new(0.5,0,0.5,0)
+        panel.Size = UDim2.new(0, 380, 0, 460)
+        panel.BackgroundColor3 = Color3.fromRGB(10,12,15)
+        panel.BorderSizePixel = 0
+        panel.Active = true; panel.ZIndex = 121
+        Instance.new("UICorner", panel).CornerRadius = UDim.new(0,20)
+        local pStroke = Instance.new("UIStroke", panel)
+        pStroke.Color = Color3.fromRGB(0,204,102); pStroke.Thickness = 1.5
+
+        local header = Instance.new("Frame", panel)
+        header.Size = UDim2.new(1,0,0,50)
+        header.BackgroundColor3 = Color3.fromRGB(0,150,75)
+        header.BackgroundTransparency = 0.1
+        header.BorderSizePixel = 0; header.ZIndex = 122
+        Instance.new("UICorner", header).CornerRadius = UDim.new(0,20)
+
+        local logo = Instance.new("TextLabel", header)
+        logo.Size = UDim2.new(0,54,1,0); logo.Position = UDim2.new(0,12,0,0)
+        logo.BackgroundTransparency = 1; logo.Text = "7UP"
+        logo.TextColor3 = Color3.fromRGB(255,255,255)
+        logo.Font = Enum.Font.GothamBlack; logo.TextSize = 18; logo.ZIndex = 123
+
+        local title = Instance.new("TextLabel", header)
+        title.Size = UDim2.new(1,-118,0,20); title.Position = UDim2.new(0,68,0,6)
+        title.BackgroundTransparency = 1; title.Text = "SKIN SELECTOR"
+        title.TextColor3 = Color3.fromRGB(255,255,255)
+        title.Font = Enum.Font.GothamBlack; title.TextSize = 14
+        title.TextXAlignment = Enum.TextXAlignment.Left; title.ZIndex = 123
+
+        local subtitle = Instance.new("TextLabel", header)
+        subtitle.Size = UDim2.new(1,-118,0,16); subtitle.Position = UDim2.new(0,68,0,26)
+        subtitle.BackgroundTransparency = 1
+        subtitle.Text = "Select and apply instantly"
+        subtitle.TextColor3 = Color3.fromRGB(174,235,193)
+        subtitle.Font = Enum.Font.GothamBold; subtitle.TextSize = 9
+        subtitle.TextXAlignment = Enum.TextXAlignment.Left; subtitle.ZIndex = 123
+
+        local closeBtn = Instance.new("TextButton", header)
+        closeBtn.Size = UDim2.new(0,30,0,30); closeBtn.Position = UDim2.new(1,-40,0,10)
+        closeBtn.BackgroundColor3 = Color3.fromRGB(215,38,45)
+        closeBtn.BorderSizePixel = 0; closeBtn.Text = "×"
+        closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        closeBtn.Font = Enum.Font.GothamBlack; closeBtn.TextSize = 20; closeBtn.ZIndex = 125
+        Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0,15)
+
+        local listFrame = Instance.new("ScrollingFrame", panel)
+        listFrame.Size = UDim2.new(1,-20,0,80); listFrame.Position = UDim2.new(0,10,0,56)
+        listFrame.BackgroundTransparency = 1
+        listFrame.BorderSizePixel = 0
+        listFrame.ScrollBarThickness = 2
+        listFrame.ScrollBarImageColor3 = Color3.fromRGB(0,204,102)
+        listFrame.CanvasSize = UDim2.new(0,0,0,0)
+        listFrame.AutomaticCanvasSize = Enum.AutomaticSize.XY
+        listFrame.ZIndex = 123
+        local grid = Instance.new("UIGridLayout", listFrame)
+        grid.CellSize = UDim2.new(0, 110, 0, 30)
+        grid.CellPadding = UDim2.new(0, 6, 0, 6)
+        grid.SortOrder = Enum.SortOrder.LayoutOrder
+
+        local previewCard = Instance.new("Frame", panel)
+        previewCard.Size = UDim2.new(1,-20,1,-210); previewCard.Position = UDim2.new(0,10,0,142)
+        previewCard.BackgroundColor3 = Color3.fromRGB(15,18,20)
+        previewCard.BorderSizePixel = 0; previewCard.ClipsDescendants = true; previewCard.ZIndex = 122
+        Instance.new("UICorner", previewCard).CornerRadius = UDim.new(0,15)
+        local previewStroke = Instance.new("UIStroke", previewCard)
+        previewStroke.Color = Color3.fromRGB(40,50,45)
+
+        local viewport = Instance.new("ViewportFrame", previewCard)
+        viewport.Size = UDim2.new(1,0,1,0); viewport.BackgroundTransparency = 1
+        viewport.Ambient = Color3.fromRGB(180,180,180)
+        viewport.LightColor = Color3.fromRGB(255,255,255)
+        viewport.LightDirection = Vector3.new(-1,-1,-1); viewport.ZIndex = 123
+
+        local applyBtn = Instance.new("TextButton", panel)
+        applyBtn.Size = UDim2.new(0.5,-15,0,40); applyBtn.Position = UDim2.new(0,10,1,-50)
+        applyBtn.BackgroundColor3 = Color3.fromRGB(0,204,102); applyBtn.BorderSizePixel = 0
+        applyBtn.Text = "APPLY"; applyBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        applyBtn.Font = Enum.Font.GothamBlack; applyBtn.TextSize = 12; applyBtn.ZIndex = 123
+        Instance.new("UICorner", applyBtn).CornerRadius = UDim.new(0,10)
+
+        local removeBtn = Instance.new("TextButton", panel)
+        removeBtn.Size = UDim2.new(0.5,-15,0,40); removeBtn.Position = UDim2.new(0.5,5,1,-50)
+        removeBtn.BackgroundColor3 = Color3.fromRGB(60,65,70); removeBtn.BorderSizePixel = 0
+        removeBtn.Text = "REMOVE"; removeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        removeBtn.Font = Enum.Font.GothamBlack; removeBtn.TextSize = 12; removeBtn.ZIndex = 123
+        Instance.new("UICorner", removeBtn).CornerRadius = UDim.new(0,10)
+
+        local function renderPreview(index)
+          viewport:ClearAllChildren()
+          local cam = Instance.new("Camera"); cam.FieldOfView = 32
+          cam.Parent = viewport; viewport.CurrentCamera = cam
+          local world = Instance.new("WorldModel"); world.Parent = viewport
+          local char = localPlayer.Character
+          if not char then return end
+          local oldArch = char.Archivable; char.Archivable = true
+          local clone = char:Clone(); char.Archivable = oldArch
+          for _, c in ipairs(clone:GetDescendants()) do
+            if c:IsA("Script") or c:IsA("LocalScript") or c:IsA("Tool") then c:Destroy()
+            elseif c:IsA("BasePart") then c.Anchored = true; c.CanCollide = false end
+          end
+          for _, c in ipairs(clone:GetChildren()) do
+            if c:IsA("Shirt") or c:IsA("Pants") then c:Destroy()
+            elseif c:GetAttribute("SevenUpCustomSkinItem") then c:Destroy() end
+          end
+          local opt = SKIN_OPTIONS[index]
+          if opt.type == "custom" then
+            _G._SevenUpSkin.ApplyCustomVariantToChar(clone, opt.variant)
+          else
+            _G._SevenUpSkin.ApplyOutfitToChar(clone, opt.variant)
+          end
+          clone.Name = "PreviewAvatar"; clone.Parent = world
+          clone:PivotTo(CFrame.new(0,0,0) * CFrame.Angles(0, math.rad(180), 0))
+          local boxCF, boxSize = clone:GetBoundingBox()
+          local target = boxCF.Position + Vector3.new(0, boxSize.Y * 0.05, 0)
+          local distance = math.max(boxSize.X, boxSize.Y, boxSize.Z) * 1.35
+          cam.CFrame = CFrame.new(target + Vector3.new(0, boxSize.Y * 0.05, distance), target)
+        end
+
+        local selectedIndex = 1
+        local skinButtons = {}
+        local function updatePreview()
+          pcall(renderPreview, selectedIndex)
+          for i, btn in pairs(skinButtons) do
+            if i == selectedIndex then
+              btn.BackgroundColor3 = Color3.fromRGB(0,204,102)
+              btn.TextColor3 = Color3.fromRGB(255,255,255)
+            else
+              btn.BackgroundColor3 = Color3.fromRGB(30,35,40)
+              btn.TextColor3 = Color3.fromRGB(180,180,180)
+            end
+          end
+        end
+
+        for i, opt in ipairs(SKIN_OPTIONS) do
+          local btn = Instance.new("TextButton", listFrame)
+          btn.BackgroundColor3 = Color3.fromRGB(30,35,40)
+          btn.BorderSizePixel = 0; btn.Text = opt.name
+          btn.TextColor3 = Color3.fromRGB(180,180,180)
+          btn.Font = Enum.Font.GothamBold; btn.TextSize = 11
+          btn.LayoutOrder = i; btn.ZIndex = 124
+          Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+          skinButtons[i] = btn
+          btn.MouseButton1Click:Connect(function() selectedIndex = i; updatePreview() end)
+        end
+
+        local function closePopup() if gui and gui.Parent then gui:Destroy() end end
+        closeBtn.MouseButton1Click:Connect(closePopup)
+        dim.MouseButton1Click:Connect(closePopup)
+
+        applyBtn.MouseButton1Click:Connect(function()
+          local opt = SKIN_OPTIONS[selectedIndex]
+          if opt.type == "custom" then
+            _G._SevenUpCustomSkinEnabled = true
+            _G._SevenUpCustomSkinVariant = opt.variant
+            _G._SevenUpOutfit1Applied = false
+            _G._SevenUpOutfit2Applied = false
+            _G._SevenUpOutfit3Applied = false
+          else
+            _G._SevenUpCustomSkinEnabled = false
+            _G._SevenUpOutfit1Applied = (opt.variant == 1)
+            _G._SevenUpOutfit2Applied = (opt.variant == 2)
+            _G._SevenUpOutfit3Applied = (opt.variant == 3)
+          end
+          _G._SevenUpSkin.SetState(_G._SevenUpCustomSkinEnabled,
+            _G._SevenUpCustomSkinVariants[_G._SevenUpCustomSkinVariant].name, false)
+          _G._SevenUpSkin.Apply(localPlayer.Character)
+          for _, fn in ipairs(_G._SevenUpOutfitButtonRefreshers) do pcall(fn) end
+          pcall(saveSevenUpSettings)
+          applyBtn.Text = "APPLIED!"
+          task.delay(1, function() if applyBtn and applyBtn.Parent then applyBtn.Text = "APPLY" end end)
+        end)
+
+        removeBtn.MouseButton1Click:Connect(function()
+          _G._SevenUpCustomSkinEnabled = false
+          _G._SevenUpOutfit1Applied = false
+          _G._SevenUpOutfit2Applied = false
+          _G._SevenUpOutfit3Applied = false
+          _G._SevenUpSkin.Apply(localPlayer.Character)
+          for _, fn in ipairs(_G._SevenUpOutfitButtonRefreshers) do pcall(fn) end
+          pcall(saveSevenUpSettings)
+          removeBtn.Text = "REMOVED!"
+          task.delay(1, function() if removeBtn and removeBtn.Parent then removeBtn.Text = "REMOVE" end end)
+        end)
+
+        updatePreview()
+      end
       local Settings
       Settings = createScrollingFrame("Settings")
       createTextLabel(Settings, "Safety")
@@ -18311,14 +18915,21 @@ local function _SevenUpMain()
           end
         end)
 
-        fn78(Utility, "SEVENUP Skin", function(arg)
-          if _G._SevenUpSkin then
-            _G._SevenUpSkin.SetEnabled(arg)
-          end
+        fn78(Utility, "Headless", function(on)
+          _G._SevenUpSkin.SetHeadless(on)
+          pcall(saveSevenUpSettings)
         end)
 
-        if _G._SevenUpSkin and handlers["SEVENUP Skin"] then
-          handlers["SEVENUP Skin"](_G._SevenUpSkin.IsEnabled(), true)
+        fn78(Utility, "Korblox", function(on)
+          _G._SevenUpSkin.SetKorblox(on)
+          pcall(saveSevenUpSettings)
+        end)
+
+        if handlers["Headless"] then
+          handlers["Headless"](_G._SevenUpHeadlessEnabled == true, true)
+        end
+        if handlers["Korblox"] then
+          handlers["Korblox"](_G._SevenUpKorbloxEnabled == true, true)
         end
 
         local function fn81(arg, arg2, arg3, arg4, arg5)
