@@ -3564,6 +3564,12 @@ local function _SevenUpMain()
             if not humanoid or not humanoidRootPart or humanoid.Health <= 0 then
               return
             end
+
+            -- [BubbleHub] drop ke time ragdoll recovery mat chalao
+            if _G.dropActive or dropControllerState.active or _G._SevenUpDropInProgress then
+              return
+            end
+
             local state = humanoid:GetState()
             if state ~= Enum.HumanoidStateType.Physics and state ~= Enum.HumanoidStateType.Ragdoll and state ~= Enum.HumanoidStateType.FallingDown then
               return
@@ -3575,24 +3581,23 @@ local function _SevenUpMain()
             ragdollRecoveryState.ResetCooldown = now2
 
             pcall(function()
+              -- [BubbleHub order] pehle state change, phir velocity clear, phir joints
+              humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+              humanoidRootPart.Velocity = Vector3.zero
+              humanoidRootPart.RotVelocity = Vector3.zero
+              humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+              humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+
               for _, descendant in ipairs(character:GetDescendants()) do
                 if descendant:IsA("Motor6D") then
                   descendant.Enabled = true
                 end
-
-                if descendant:IsA("ParticleEmitter") then
+                if descendant:IsA("Constraint") then
                   descendant.Enabled = true
                 end
               end
 
-              humanoid.PlatformStand = false
-              humanoid.Sit = false
-              humanoid.AutoRotate = true
-              humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-              humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
-              humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
               local currentCamera = workspace.CurrentCamera
-
               if currentCamera then
                 currentCamera.CameraSubject = humanoid
               end
@@ -3603,11 +3608,14 @@ local function _SevenUpMain()
 
               if controlModule then
                 local module = require(controlModule)
-
                 if module and module.Enable then
                   module:Enable()
                 end
               end
+
+              humanoid.AutoRotate = true
+              humanoid.PlatformStand = false
+              humanoid.Sit = false
             end)
           end)
         end
@@ -6845,7 +6853,14 @@ local function _SevenUpMain()
         if not ok2 then
           return false, result2
         end
-        local ok3, result3 = pcall(_G._SevenUpSaveFiles.read, arg)
+        local ok3, result3
+        for _ = 1, 10 do
+          ok3, result3 = pcall(_G._SevenUpSaveFiles.read, arg)
+          if ok3 and type(result3) == "string" and result3 == result then
+            break
+          end
+          task.wait(0.05)
+        end
         if not ok3 or type(result3) ~= "string" or result3 ~= result then
           return false, "exact read-back failed"
         end
@@ -7064,7 +7079,7 @@ local function _SevenUpMain()
               _G._SevenUpSaveState.queued = true
               local lastAt = _G._SevenUpSaveState.lastAt
 
-              task.delay(math.max(0.1, 0.25 - tick() - lastAt), function()
+              task.delay(math.max(0.1, 0.25 - (tick() - lastAt)), function()
                 _G._SevenUpSaveState.queued = false
                 saveSevenUpSettings(true)
               end)
@@ -7234,13 +7249,16 @@ local function _SevenUpMain()
               end
 
               if ok2 and type(result2.skin) == "table" then
-                pcall(function()
+                local okB, errB = pcall(function()
                   _G._SevenUpSaveFiles.write(_G._SevenUpSaveFiles.backup, result)
 
                   if _G._SevenUpSaveFiles.read(_G._SevenUpSaveFiles.backup) ~= result then
                     error("backup read-back failed")
                   end
                 end)
+                if not okB then
+                  warn("[SevenUpSave] backup failed:", errB)
+                end
               end
             end
 
@@ -7313,6 +7331,7 @@ local function _SevenUpMain()
         fn43 = function()
           if not _G._SevenUpResolveSaveApi() then
             print("[SevenUpLoad] SKIP - no readfile/writefile API")
+            _G._SevenUpConfigLoadReady = true
             return
           end
           local sevenupLoadedUnifiedV5 = false
@@ -7427,6 +7446,7 @@ local function _SevenUpMain()
             pcall(_G._SevenUpLoadControllerBindings)
             if flag28 then
               print("[SevenUpLoad] FAIL - config files exist but none passed validation")
+              _G._SevenUpConfigLoadReady = true
               return false
             end
             _G._SevenUpConfigLoadReady = true
@@ -19794,7 +19814,7 @@ local function _SevenUpMain()
             end
           end)
 
-          sevenupSyncMobile()
+          pcall(sevenupSyncMobile)
           _G._SevenUpSettingsReady = true
           pcall(_G._SevenUpPersistControllerBindings)
           pcall(saveSevenUpSettings, true)
