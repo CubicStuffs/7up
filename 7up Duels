@@ -1,23 +1,3 @@
--- SEVENUP optimized build (.sevenup)
--- Performance changes:
---   * Removed injected unconditional console spam.
---   * Reduced anti-lag scan burst size to avoid frame-time spikes.
---   * Yielded large visual scans more frequently.
---   * Throttled idle auto-steal polling slightly.
-
--- Layout:
---   1. Bootstrap and shared runtime
---   2. Intro audio, font helpers, and the steal-bar HUD
---   3. Plot synchronization, stealing, carry, and movement controllers
---   4. Character physics, ragdoll recovery, anti-lag, and visual effects
---   5. Sky presets, avatar skins, and settings persistence
---   6. Targeting, bat controllers, counters, and ESP
---   7. Main interface, settings widgets, mobile controls, and Safe Mode
---   8. Save/reset UI and animation-pack hooks
---
--- The original build is kept as one entry-point script because its feature blocks
--- share local state and upvalues. Section labels below are comments only.
-
 -- SevenUp Volt (Luarmor auth removed)
 local colors = nil
 local Lighting = game:GetService("Lighting")
@@ -14221,6 +14201,7 @@ local function _SevenUpMain()
             imageLabel2.ImageTransparency = flag30 and not flag32 and 0 or 1
             local sevenupGetButtonImageTint = _G._SevenUpGetButtonImageTint and _G._SevenUpGetButtonImageTint() or Color3.fromRGB(240, 255, 255)
             imageLabel.ImageColor3 = flag30 and sevenupGetButtonImageTint:Lerp(Color3.new(0, 0, 0), 0.82) or sevenupGetButtonImageTint
+            imageLabel.ImageTransparency = flag30 and 0 or 1 -- FIX: Black image hide hogi jab OFF hoga
             imageLabel2.ImageColor3 = flag31 and Color3.fromRGB(140, 150, 158) or sevenupGetButtonImageTint
             uiStroke.Transparency = 1
             v100.Thickness = flag30 and not flag32 and 10 or 1.1
@@ -14228,7 +14209,7 @@ local function _SevenUpMain()
             v100.Transparency = flag32 and 1 or flag30 and 0 or 1
             v101.Color = flag30 and v78 or v79
             v101.Transparency = flag30 and v82 or v83
-            v99.TextColor3 = (flag30 and (flag32 and Color3.fromRGB(8, 24, 16) or Color3.fromRGB(255, 255, 255))) or Color3.fromRGB(0, 0, 0)
+            v99.TextColor3 = Color3.fromRGB(0, 0, 0) -- FIX: Text hamesha Black rahega taaki Light Green aur White dono pe dikhe
             local v103 = v99
             local v104 = flag30
 
